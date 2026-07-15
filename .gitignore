@@ -1,0 +1,92 @@
+# ====================
+# Visual Studio Code
+# ====================
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# ====================
+# Archivos del sistema
+# ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ====================
+# Dependencias de Node.js (si usas)
+# ====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ====================
+# Variables de entorno
+# ====================
+.env
+.env.local
+.env.*.local
+.env.production
+
+# ====================
+# Archivos de logs
+# ====================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ====================
+# Archivos de build/dist
+# ====================
+dist/
+build/
+out/
+*.min.js
+*.min.css
+
+# ====================
+# IDE y editores (alternativos)
+# ====================
+.idea/
+*.iml
+.vscode-test/
+*.swp
+*.swo
+*~
+.~lock.*
+
+# ====================
+# Archivos de caché
+# ====================
+.cache/
+.parcel-cache/
+.turbo/
+.eslintcache
+
+# ====================
+# Archivos de cobertura de tests
+# ====================
+coverage/
+.nyc_output/
+
+# ====================
+# Otros archivos temporales
+# ====================
+*.tmp
+*.temp
+*.bak
+*.backup
