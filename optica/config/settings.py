@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     # librerias
     'widget_tweaks',
     # Modulos
-    'modules.core'
+    'modules.core',
+    'modules.paciente'
 ]
 
 MIDDLEWARE = [
