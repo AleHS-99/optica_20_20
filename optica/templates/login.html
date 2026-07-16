@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+{% load static %}
+{% load widget_tweaks %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGA | Login</title>
+    <!--=============== ICONS ===============-->
+    <link href="{% static 'plugins/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
+    <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+  <script src="{% static 'plugins/sweetalert2/sweetalert2.all.min.js' %}"></script>
+    <!--=============== CSS ===============-->
+    <link rel="stylesheet" href="{% static 'login/css/styles.css' %}">
+    <style>
+        .fa-eye, .fa-eye-slash {
+            font-size: 1.25rem !important; /* Asegurando visibilidad */
+            cursor: pointer;
+        }
+        .login__content {
+          position: relative;
+          height: 95vh;
+          align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+            <div class="login__content">
+                <img src="{% static 'login/img/hotel-almirante.jpg' %}" alt="login image" class="login__img">
+
+                <form action="" class="login__form" method="post">
+                    {% csrf_token %}
+                    <div>
+                        <h1 class="login__title">
+                            <span>SAGA</span> Inicio de Sesi&oacute;n
+                        </h1>
+                        <p class="login__description">
+                            Por favor logeate para continuar.
+                        </p>
+                    </div>
+
+                    <div>
+                        <div class="login__inputs">
+                            <div>
+                                <label class="login__label">Usuario</label>
+                                {{ form.username|add_class:'login__input'|attr:'placeholder:Usuario'|attr:'autocomplete:off'}}
+
+                            </div>
+
+                            <div>
+                                <label class="login__label">Password</label>
+
+                                <div class="login__box">
+                                    {{ form.password|add_class:'login__input'|attr:'placeholder:Contraseña'|attr:'autocomplete:off'|attr:'id:input-pass'}}
+                                    <i class="login__eye fa fa-eye" id="input-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div>
+                        <div class="login__buttons">
+                            <button type="submit" class="login__button">Iniciar Sesi&oacute;n</button>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    <script>
+            {% if form.errors %}
+            var errors = '';
+            {% for field in form %}
+                {% for error in field.errors %}
+                    errors += '{{ error }}\n';
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                errors += '{{ error }}\n';
+            {% endfor %}
+            Swal.fire({
+                title: 'Error!',
+                text: errors,
+                icon: 'error'
+            });
+        {% endif %}
+  </script>
+    <!--=============== MAIN JS ===============-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const showHiddenPass = (inputPass, inputIcon) => {
+                const input = document.getElementById(inputPass),
+                iconEye = document.getElementById(inputIcon);
+                iconEye.addEventListener('click', () => {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        iconEye.classList.add('fa-eye-slash');
+                        iconEye.classList.remove('fa-eye');
+                    }else {
+                        input.type = 'password';
+                        iconEye.classList.remove('fa-eye-slash');
+                        iconEye.classList.add('fa-eye');
+                    }
+                });
+            }
+            showHiddenPass('input-pass', 'input-icon');
+        });
+    </script>
+</body>
+</html>

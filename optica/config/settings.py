@@ -37,6 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # librerias
+    'widget_tweaks',
+    # Modulos
+    'modules.core'
 ]
 
 MIDDLEWARE = [
@@ -121,5 +125,5 @@ STATICFILES_DIRS =[
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = "home"
-LOGOUT_REDIRECT_URL = 'login'
+LOGIN_REDIRECT_URL = "core:home"
+LOGOUT_REDIRECT_URL = 'core:login'

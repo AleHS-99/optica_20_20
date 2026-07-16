@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block stylesheet %}
+
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<script src="{% static 'plugins/select2/js/select2.js' %}"></script>
+<script src="{% static 'plugins/select2/js/i18n/es.js' %}"></script>
+<script src="{% static 'js/function.js' %}"></script>
+
+{% endblock %}
+
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="content-wrapper">
+    <br>
+    <section class="content">
+        <div class="container-fluid">
+            <form method="post">
+                {% csrf_token %}
+                <div class="card card-default">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            {% if action == 'add' %}
+                                <i class="fas fa-plus"></i>
+                            {% else %}
+                                <i class="fas fa-edit"></i>
+                            {% endif %} {{ title }}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+
+                        {% for field in form.visible_fields %}
+                            <div class="form-group">
+                                <label for="email">{{ field.label }}:</label>
+                                {{ field|add_class:"form-control"|attr:"autocomplete:off" }}
+                            </div>
+                        {% endfor %}
+                        <input type="hidden" class="action" name="action" value="{{ action }}">
+                    </div>
+                    <div class="card-footer ">
+                        <button type="submit" class="btn btn-success btn-flat btnTest">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                        {% if not button == "cancel" %}
+                        <a href="{{ list_url }}" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+    {% if form.errors %}
+    var errors = '';
+    {% for field in form %}
+        {% for error in field.errors %}
+            errors += '{{ error }}\n';
+        {% endfor %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+        errors += '{{ error }}\n';
+    {% endfor %}
+    Swal.fire({
+        title: 'Error!',
+        text: errors,
+        icon: 'error'
+    });
+{% endif %}
+
+$('form').on('submit', function (e) {
+    e.preventDefault();
+    var parameters = new FormData(this);
+    submit_with_ajax(window.location.pathname, 'Notificación', '¿Estas seguro de realizar la siguiente acción?', parameters, function () {
+        Swal.fire({
+            title: 'Alerta',
+            text: {% if action == 'add' %}'Registro añadido correctamente',{% else %}'Registro editado correctamente',{% endif %}
+            icon: 'success',
+            timer: 2000,
+            didClose: () => {
+                location.href = '{{ list_url }}';
+                
+            }
+        }).then((result) => {
+        });
+        
+    });
+});
+$(function(){
+    $('.select2').select2({
+        theme: "bootstrap4",
+        language: "es"
+    });
+});
+</script>
+{% block scripts2 %}
+{% endblock scripts2 %}
+{% endblock scripts %}
