@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'widget_tweaks',
     # Modulos
     'modules.core',
-    'modules.paciente'
+    'modules.paciente',
+    'modules.consultas'
 ]
 
 MIDDLEWARE = [

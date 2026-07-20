@@ -1,0 +1,243 @@
+<!-- modules/consultas/templates/consultas/add_consulta.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block stylesheet %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"/>
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"/>
+<style>
+    .ci-valid {
+        border-color: #28a745 !important;
+        background-color: #f8fff8 !important;
+    }
+    .ci-invalid {
+        border-color: #dc3545 !important;
+        background-color: #fff8f8 !important;
+    }
+    .ci-loading {
+        border-color: #ffc107 !important;
+        background-color: #fffff0 !important;
+    }
+    #ci-status {
+        margin-top: 5px;
+        font-size: 0.9rem;
+    }
+    #card-consultas, #card-consulta-form {
+        display: none;
+    }
+    .card-tools .btn {
+        margin-left: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <br>
+    <section class="content">
+        <div class="container-fluid">
+            <form id="PacienteForm" method="post">
+                {% csrf_token %}
+                
+                <!-- Card Datos del Paciente -->
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-user-plus"></i> Datos del Paciente
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="id_ci">CI *</label>
+                                    {{ form.ci|add_class:"form-control"|attr:"placeholder:12345678901" }}
+                                    <div id="ci-status"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="id_nombre">Nombre *</label>
+                                    {{ form.nombre|add_class:"form-control"|attr:"placeholder:Nombre" }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="id_apell1">1er Apellido *</label>
+                                    {{ form.apell1|add_class:"form-control"|attr:"placeholder:Primer apellido" }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="id_apell2">2do Apellido</label>
+                                    {{ form.apell2|add_class:"form-control"|attr:"placeholder:Segundo apellido" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="id_telefono">Teléfono</label>
+                                    {{ form.telefono|add_class:"form-control"|attr:"placeholder:55555555" }}
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="id_direccion">Dirección</label>
+                                    {{ form.direccion|add_class:"form-control"|attr:"placeholder:Dirección"|attr:"rows:2" }}
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="paciente_id" id="paciente-id" value="">
+                    </div>
+                    <div class="card-footer">
+                        <button type="button" id="btn-guardar-paciente" class="btn btn-success btn-flat">
+                            <i class="fas fa-save"></i> Guardar Paciente
+                        </button>
+                        <button type="button" id="btn-limpiar-paciente" class="btn btn-warning btn-flat">
+                            <i class="fas fa-undo"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Card Listado de Consultas -->
+            <div class="card card-default" id="card-consultas">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-history"></i> Últimas Consultas
+                        <span class="badge badge-info" id="total-consultas">0</span>
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" id="btn-nueva-consulta" class="btn btn-primary btn-flat" disabled>
+                            <i class="fas fa-plus"></i> Nueva Consulta
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="data">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Refracción</th>
+                                    <th>Ojo Derecho</th>
+                                    <th>Ojo Izquierdo</th>
+                                    <th>Add</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- DataTable llena esto automáticamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Formulario de Consulta (oculto) -->
+            <div class="card card-success" id="card-consulta-form">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-notes-medical"></i> Datos de la Consulta
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="ConsultaForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_refraccion">Refracción</label>
+                                    <input type="text" name="refraccion" id="id_refraccion" class="form-control" 
+                                           placeholder="Refracción">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_add">Add</label>
+                                    <input type="text" name="add" id="id_add" class="form-control" 
+                                           placeholder="Adición">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_ojo_derecho">Ojo Derecho</label>
+                                    <input type="text" name="ojo_derecho" id="id_ojo_derecho" class="form-control" 
+                                           placeholder="Ojo Derecho">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_ojo_izquierdo">Ojo Izquierdo</label>
+                                    <input type="text" name="ojo_izquierdo" id="id_ojo_izquierdo" class="form-control" 
+                                           placeholder="Ojo Izquierdo">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="id_galenos">Galenos</label>
+                                    <input type="text" name="galenos" id="id_galenos" class="form-control" 
+                                           placeholder="Galenos / Prescripción">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="id_corta_y_monta">Corta y Monta</label>
+                                    <input type="text" name="corta_y_monta" id="id_corta_y_monta" class="form-control" 
+                                           placeholder="Indicaciones de corta y monta">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="id_observaciones">Observaciones</label>
+                                    <textarea name="observaciones" id="id_observaciones" class="form-control" 
+                                              rows="3" placeholder="Observaciones adicionales"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="paciente_id" id="consulta-paciente-id" value="">
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <button type="button" id="btn-guardar-consulta" class="btn btn-success btn-flat">
+                        <i class="fas fa-save"></i> Guardar Consulta
+                    </button>
+                    <button type="button" id="btn-cancelar-consulta" class="btn btn-danger btn-flat">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'plugins/datatables/jquery.dataTables.js' %}"></script>
+<script src="{% static 'plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'js/consultas/add.js' %}"></script>
+{% endblock %}

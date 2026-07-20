@@ -47,3 +47,4 @@ class Paciente(models.Model):
         region="CU"  # Para Cuba
     )
     direccion = models.TextField(verbose_name="Dirección", blank=True,null=True)
+    

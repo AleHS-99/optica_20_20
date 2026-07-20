@@ -18,5 +18,6 @@ Including another URLconf
 from django.urls import path, include
 
 urlpatterns = [
-    path('',include('modules.core.urls'))
+    path('',include('modules.core.urls')),
+    path('clinica/',include('modules.consultas.urls'))
 ]

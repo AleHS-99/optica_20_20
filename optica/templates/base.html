@@ -70,6 +70,25 @@
                             </p>
                         </a>
                     </li>
+                    <li class="nav-item {% if clinica %}menu-open{% endif %}" id='etr'>
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-building"></i>
+                            <p>
+                                Cl&iacute;nica
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'consultas:add_consulta' %}" class="nav-link">
+                                    <i class="nav-icon far fa-circle"></i>
+                                    <p>
+                                        Consulta
+                                    </p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a href="{% url 'core:pass_change' %}" class="nav-link">
                             <i class="nav-icon fas fa-key"></i>
