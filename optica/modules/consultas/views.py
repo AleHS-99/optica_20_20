@@ -79,7 +79,7 @@ class AddConsultaView(LoginRequiredMixin, TemplateView):
         
         if form.is_valid():
             paciente = form.save()
-            new_paciente = Paciente.objects.las()
+            new_paciente = Paciente.objects.last()
             return JsonResponse({
                 'success': True,
                 'paciente_id': new_paciente.id,
