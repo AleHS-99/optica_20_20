@@ -1,4 +1,3 @@
-<!-- modules/consultas/templates/consultas/add_consulta.html -->
 {% extends 'base.html' %}
 {% load static %}
 {% load widget_tweaks %}
@@ -34,13 +33,13 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="content-wrapper">
     <br>
     <section class="content">
         <div class="container-fluid">
             <form id="PacienteForm" method="post">
                 {% csrf_token %}
-                
                 <!-- Card Datos del Paciente -->
                 <div class="card card-primary card-outline">
                     <div class="card-header">
@@ -55,94 +54,87 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-12">
                                 <div class="form-group">
                                     <label for="id_ci">CI *</label>
                                     {{ form.ci|add_class:"form-control"|attr:"placeholder:12345678901" }}
                                     <div id="ci-status"></div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="id_nombre">Nombre *</label>
                                     {{ form.nombre|add_class:"form-control"|attr:"placeholder:Nombre" }}
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="id_apell1">1er Apellido *</label>
                                     {{ form.apell1|add_class:"form-control"|attr:"placeholder:Primer apellido" }}
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="id_apell2">2do Apellido</label>
                                     {{ form.apell2|add_class:"form-control"|attr:"placeholder:Segundo apellido" }}
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_telefono">Teléfono</label>
+                                    <label for="id_telefono">Tel&eacute;fono</label>
                                     {{ form.telefono|add_class:"form-control"|attr:"placeholder:55555555" }}
                                 </div>
                             </div>
-                            <div class="col-md-8">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="id_direccion">Dirección</label>
+                                    <label for="id_direccion">Direcci&oacute;n</label>
                                     {{ form.direccion|add_class:"form-control"|attr:"placeholder:Dirección"|attr:"rows:2" }}
                                 </div>
                             </div>
                         </div>
                         <input type="hidden" name="paciente_id" id="paciente-id" value="">
                     </div>
-                    <div class="card-footer">
-                        <button type="button" id="btn-guardar-paciente" class="btn btn-success btn-flat">
-                            <i class="fas fa-save"></i> Guardar Paciente
-                        </button>
-                        <button type="button" id="btn-limpiar-paciente" class="btn btn-warning btn-flat">
-                            <i class="fas fa-undo"></i> Limpiar
-                        </button>
+                    <!-- Card Listado de Consultas -->
+                    <div class="card card-default" id="card-consultas">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-history"></i> &Uacute;ltimas Consultas
+                            </h3>
+                            <div class="card-tools">
+                                <button type="button" id="btn-nueva-consulta" class="btn btn-primary btn-flat" disabled>
+                                    <i class="fas fa-plus"></i> Nueva Consulta
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="data">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Refracción</th>
+                                            <th>Ojo Derecho</th>
+                                            <th>Ojo Izquierdo</th>
+                                            <th>Add</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- DataTable llena esto automáticamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
-
-            <!-- Card Listado de Consultas -->
-            <div class="card card-default" id="card-consultas">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-history"></i> Últimas Consultas
-                        <span class="badge badge-info" id="total-consultas">0</span>
-                    </h3>
-                    <div class="card-tools">
-                        <button type="button" id="btn-nueva-consulta" class="btn btn-primary btn-flat" disabled>
-                            <i class="fas fa-plus"></i> Nueva Consulta
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="data">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Refracción</th>
-                                    <th>Ojo Derecho</th>
-                                    <th>Ojo Izquierdo</th>
-                                    <th>Add</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- DataTable llena esto automáticamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card Formulario de Consulta (oculto) -->
+             <!-- Card Formulario de Consulta (oculto) -->
             <div class="card card-success" id="card-consulta-form">
                 <div class="card-header">
                     <h3 class="card-title">
@@ -160,7 +152,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_refraccion">Refracción</label>
+                                    <label for="id_refraccion">Refracci&oacute;n</label>
                                     <input type="text" name="refraccion" id="id_refraccion" class="form-control" 
                                            placeholder="Refracción">
                                 </div>
@@ -231,7 +223,9 @@
         </div>
     </section>
 </div>
+
 {% endblock %}
+
 
 {% block scripts %}
 {{ block.super }}

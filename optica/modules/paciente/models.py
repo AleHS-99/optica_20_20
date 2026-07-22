@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from phonenumber_field.modelfields import PhoneNumberField
+from django.forms import model_to_dict
 
 # Create your models here.
 class Paciente(models.Model):
@@ -47,4 +48,10 @@ class Paciente(models.Model):
         region="CU"  # Para Cuba
     )
     direccion = models.TextField(verbose_name="Dirección", blank=True,null=True)
+    
+    def toJSON(self):
+        item = model_to_dict(self)
+        item['telefono'] = str(self.telefono)
+        return item
+    
     
