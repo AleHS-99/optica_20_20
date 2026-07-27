@@ -1,0 +1,158 @@
+name: Build Tauri App
+
+on:
+  # Ejecutar manualmente desde la pestaña "Actions" en GitHub
+  workflow_dispatch:
+  
+  # Ejecutar automáticamente cuando se crea un tag de versión (v1.0.0, v2.0.0, etc.)
+  push:
+    tags:
+      - 'v*'
+  
+  # Opcional: también en cada push a main (descomenta si lo quieres)
+  # push:
+  #   branches: [ main ]
+
+# Permisos necesarios para crear releases
+permissions:
+  contents: write
+
+jobs:
+  # ============ WINDOWS ============
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Cache de Rust (Cargo)
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Instalar dependencias del frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build de Tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "Óptica 20/20 v__VERSION__"
+          releaseBody: "Nueva versión disponible. Descarga el instalador para Windows."
+          releaseDraft: true
+          prerelease: false
+
+  # ============ LINUX ============
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar dependencias del sistema (Tauri)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Instalar Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Cache de Rust (Cargo)
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Instalar dependencias del frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build de Tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "Óptica 20/20 v__VERSION__"
+          releaseBody: "Nueva versión disponible. Descarga el paquete para Linux (.deb / .AppImage)."
+          releaseDraft: true
+          prerelease: false
+
+  # ============ MACOS ============
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin, aarch64-apple-darwin
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Cache de Rust (Cargo)
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Instalar dependencias del frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build de Tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "Óptica 20/20 v__VERSION__"
+          releaseBody: "Nueva versión disponible. Descarga el .dmg para macOS."
+          releaseDraft: true
+          prerelease: false
