@@ -5,8 +5,6 @@ import Swal from "sweetalert2";
 import {
   LayoutDashboard,
   Stethoscope,
-  Users,
-  History,
   Key,
   LogOut,
   Menu,
