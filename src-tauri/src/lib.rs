@@ -82,6 +82,27 @@ pub fn run() {
             commands::entradas::listar_stock_general,
             commands::entradas::listar_movimientos,
             commands::entradas::crear_salida_manual,
+            // Contabilidad - Categorías de Gasto
+            commands::contabilidad::listar_categorias_gasto,
+            commands::contabilidad::crear_categoria_gasto,
+            commands::contabilidad::actualizar_categoria_gasto,
+            commands::contabilidad::eliminar_categoria_gasto,
+            // Contabilidad - Gastos
+            commands::contabilidad::listar_gastos,
+            commands::contabilidad::crear_gasto,
+            commands::contabilidad::actualizar_gasto,
+            commands::contabilidad::eliminar_gasto,
+            // Contabilidad - Plantilla Gastos Fijos
+            commands::contabilidad::listar_gastos_fijos_plantilla,
+            commands::contabilidad::crear_gasto_fijo,
+            commands::contabilidad::actualizar_gasto_fijo,
+            commands::contabilidad::toggle_gasto_fijo,
+            commands::contabilidad::eliminar_gasto_fijo,
+            // Contabilidad - Impuestos
+            commands::contabilidad::listar_impuestos,
+            commands::contabilidad::crear_impuesto,
+            commands::contabilidad::actualizar_impuesto,
+            commands::contabilidad::eliminar_impuesto,
         ])
         .run(tauri::generate_context!())
         .expect("error mientras se ejecuta tauri");

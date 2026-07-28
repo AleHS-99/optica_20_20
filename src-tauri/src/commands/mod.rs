@@ -5,3 +5,4 @@ pub mod consultas;
 pub mod backup;
 pub mod inventario;
 pub mod entradas;
+pub mod contabilidad;

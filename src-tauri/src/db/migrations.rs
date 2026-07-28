@@ -240,6 +240,97 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), String> {
     .execute(pool)
     .await
     .map_err(|e| format!("Error creando índice: {}", e))?;
+
+        // ============================================================
+    // MÓDULO CONTABILIDAD - v0.0.3
+    // ============================================================
+
+    // Categorías de gastos
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS categorias_gasto (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL UNIQUE,
+            descripcion TEXT NOT NULL DEFAULT '',
+            tipo TEXT NOT NULL DEFAULT 'VARIABLE',
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla categorias_gasto: {}", e))?;
+
+    // Gastos (registros individuales)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS gastos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            categoria_id INTEGER NOT NULL,
+            descripcion TEXT NOT NULL,
+            monto REAL NOT NULL,
+            fecha TEXT NOT NULL,
+            tipo TEXT NOT NULL DEFAULT 'VARIABLE',
+            es_autogenerado INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (categoria_id) REFERENCES categorias_gasto(id)
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla gastos: {}", e))?;
+
+    // Plantilla de gastos fijos mensuales
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS gastos_fijos_plantilla (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            categoria_id INTEGER NOT NULL,
+            descripcion TEXT NOT NULL,
+            monto REAL NOT NULL,
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (categoria_id) REFERENCES categorias_gasto(id)
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla gastos_fijos_plantilla: {}", e))?;
+
+    // Impuestos (configurables por el usuario)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS impuestos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            porcentaje REAL NOT NULL,
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla impuestos: {}", e))?;
+
+    // Índices para contabilidad
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_gastos_fecha ON gastos(fecha)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_gastos_categoria ON gastos(categoria_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
     
     Ok(())
 }

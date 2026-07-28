@@ -14,6 +14,10 @@ import Proveedores from "./components/inventario/Proveedores";
 import EntradasInventario from "./components/inventario/EntradasInventario";
 import AjustesInventario from "./components/inventario/AjustesInventario";
 import StockGeneral from "./components/inventario/StockGeneral";
+import Gastos from "./components/contabilidad/Gastos";
+import GastosFijos from "./components/contabilidad/GastosFijos";
+import CategoriasGasto from "./components/contabilidad/CategoriasGasto";
+import Impuestos from "./components/contabilidad/Impuestos";
 
 function App() {
   return (
@@ -36,6 +40,10 @@ function App() {
           <Route path="inventario/entradas" element={<EntradasInventario />} />
           <Route path="inventario/ajustes" element={<AjustesInventario />} />
           <Route path="inventario/stock" element={<StockGeneral />} />
+          <Route path="contabilidad/gastos" element={<Gastos />} />
+          <Route path="contabilidad/gastos-fijos" element={<GastosFijos />} />
+          <Route path="contabilidad/categorias" element={<CategoriasGasto />} />
+          <Route path="contabilidad/impuestos" element={<Impuestos />} />
         </Route>
 
         {/* Redirección por defecto para rutas desconocidas */}
