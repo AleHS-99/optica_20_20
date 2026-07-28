@@ -35,3 +35,4 @@ rand = "0.8"
 # Manejo de errores y fechas
 thiserror = "1"
 chrono = { version = "0.4", features = ["serde"] }
+tauri-plugin-dialog = "2.7.2"

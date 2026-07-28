@@ -14,6 +14,7 @@ pub struct AppState {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init()) // Plugin de diálogos
         .setup(|app| {
             // Inicializar base de datos de forma asíncrona
             let app_handle = app.handle().clone();
@@ -54,6 +55,9 @@ pub fn run() {
             commands::consultas::obtener_detalle_consulta,
             commands::consultas::listar_todas_consultas,
             commands::consultas::obtener_estadisticas_dashboard,
+            // Backup/Restore
+            commands::backup::crear_backup,
+            commands::backup::restaurar_backup,
         ])
         .run(tauri::generate_context!())
         .expect("error mientras se ejecuta tauri");

@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Database
 } from "lucide-react";
 import { useState } from "react";
 
@@ -123,6 +124,16 @@ export default function Layout() {
               </div>
             )}
           </div>
+          {/* Backup Restore */}
+          <button
+            onClick={() => navigate("/app/backup")}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+              isActive("/app/backup") ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+            }`}
+          >
+            <Database className="w-5 h-5 flex-shrink-0" />
+            {sidebarOpen && <span className="font-medium">Base de Datos</span>}
+          </button>
 
           {/* Cambiar Contraseña */}
           <button

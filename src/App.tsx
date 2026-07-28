@@ -7,6 +7,7 @@ import NuevaConsulta from "./components/NuevaConsulta";
 import Pacientes from "./components/Pacientes";
 import Historico from "./components/Historico";
 import CambiarPassword from "./components/CambiarPassword";
+import BackupRestore from "./components/BackupRestore";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="pacientes" element={<Pacientes />} />
           <Route path="historico" element={<Historico />} />
           <Route path="password" element={<CambiarPassword />} />
+          <Route path="backup" element={<BackupRestore />} />
         </Route>
 
         {/* Redirección por defecto para rutas desconocidas */}

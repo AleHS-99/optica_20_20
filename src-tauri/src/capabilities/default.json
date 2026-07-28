@@ -1,10 +1,18 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window",
+  "description": "Capacidad por defecto para la app de optica",
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:window:default",
+    "core:window:allow-close",
+    "core:window:allow-set-size",
+    "dialog:default",
+    "dialog:allow-save",
+    "dialog:allow-open",
+    "dialog:allow-message",
+    "dialog:allow-ask",
     "opener:default"
   ]
 }
