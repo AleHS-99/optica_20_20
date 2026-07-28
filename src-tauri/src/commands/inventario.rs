@@ -374,8 +374,8 @@ pub async fn crear_producto(
 
     // Validar tipo
     let tipo = datos.tipo.unwrap_or_else(|| "PRODUCTO".to_string());
-    if !["PRODUCTO", "SERVICIO", "COMPUESTO"].contains(&tipo.as_str()) {
-        return Err("Tipo inválido. Debe ser PRODUCTO, SERVICIO o COMPUESTO".to_string());
+    if !["PRODUCTO", "SERVICIO"].contains(&tipo.as_str()) {
+        return Err("Tipo inválido. Debe ser PRODUCTO o SERVICIO".to_string());
     }
 
     // Generar código automático

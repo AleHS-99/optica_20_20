@@ -11,6 +11,9 @@ import BackupRestore from "./components/BackupRestore";
 import Productos from "./components/inventario/Productos";
 import Categorias from "./components/inventario/Categorias";
 import Proveedores from "./components/inventario/Proveedores";
+import EntradasInventario from "./components/inventario/EntradasInventario";
+import AjustesInventario from "./components/inventario/AjustesInventario";
+import StockGeneral from "./components/inventario/StockGeneral";
 
 function App() {
   return (
@@ -30,6 +33,9 @@ function App() {
           <Route path="inventario/productos" element={<Productos />} />
           <Route path="inventario/categorias" element={<Categorias />} />
           <Route path="inventario/proveedores" element={<Proveedores />} />
+          <Route path="inventario/entradas" element={<EntradasInventario />} />
+          <Route path="inventario/ajustes" element={<AjustesInventario />} />
+          <Route path="inventario/stock" element={<StockGeneral />} />
         </Route>
 
         {/* Redirección por defecto para rutas desconocidas */}

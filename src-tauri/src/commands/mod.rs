@@ -4,3 +4,4 @@ pub mod pacientes;
 pub mod consultas;
 pub mod backup;
 pub mod inventario;
+pub mod entradas;

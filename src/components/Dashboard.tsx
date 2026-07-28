@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 import {
   Users, FileText, Calendar, UserCheck,
   Stethoscope, Package, BarChart3, Loader2,
-  Clock, ArrowRight
+  Clock, ArrowRight, AlertTriangle
 } from "lucide-react";
 
 interface Stats {
@@ -172,8 +172,9 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* === ESPACIO RESERVADO PARA FUTUROS MÓDULOS === */}
+        {/* === ALERTAS DE STOCK BAJO === */}
         <div className="space-y-4">
+          <StockBajoCard />
           <FutureModuleCard
             icon={Package}
             title="Inventario"
@@ -275,6 +276,65 @@ function FutureModuleCard({
       <Icon className="w-8 h-8 text-gray-400 mb-2" />
       <h3 className="font-semibold text-gray-600">{title}</h3>
       <p className="text-sm text-gray-500 mt-1">{description}</p>
+    </div>
+  );
+}
+
+function StockBajoCard() {
+  const [productosBajoStock, setProductosBajoStock] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    cargarAlertas();
+  }, []);
+
+  const cargarAlertas = async () => {
+    try {
+      const r: any = await invoke("listar_stock_general", {
+        soloBajoStock: true,
+        page: 1,
+        pageSize: 5
+      });
+      setProductosBajoStock(r.data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <Loader2 className="w-6 h-6 text-blue-600 animate-spin mx-auto" />
+      </div>
+    );
+  }
+
+  if (productosBajoStock.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+      <h3 className="font-semibold text-red-900 flex items-center gap-2 mb-3">
+        <AlertTriangle className="w-5 h-5" />
+        Alertas de Stock Bajo
+      </h3>
+      <div className="space-y-2">
+        {productosBajoStock.map(p => (
+          <div key={p.producto_id} className="flex justify-between items-center text-sm bg-white rounded p-2">
+            <div>
+              <p className="font-medium text-gray-800">{p.producto_nombre}</p>
+              <p className="text-xs text-gray-500">{p.producto_codigo}</p>
+            </div>
+            <div className="text-right">
+              <p className="font-bold text-red-600">{p.stock_actual}</p>
+              <p className="text-xs text-gray-500">mín: {p.stock_minimo}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

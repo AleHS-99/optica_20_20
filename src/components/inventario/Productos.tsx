@@ -44,6 +44,7 @@ export default function Productos() {
 
   const totalPages = Math.ceil(total / pageSize);
 
+
   useEffect(() => {
     cargarCategorias();
     cargarProveedores();
@@ -172,7 +173,6 @@ export default function Productos() {
     switch (tipo) {
       case "PRODUCTO": return "bg-blue-100 text-blue-700";
       case "SERVICIO": return "bg-purple-100 text-purple-700";
-      case "COMPUESTO": return "bg-amber-100 text-amber-700";
       default: return "bg-gray-100 text-gray-700";
     }
   };
@@ -202,7 +202,6 @@ export default function Productos() {
             <option value="">Todos los tipos</option>
             <option value="PRODUCTO">Producto</option>
             <option value="SERVICIO">Servicio</option>
-            <option value="COMPUESTO">Compuesto</option>
           </select>
           <select value={filtroCategoria || ""} onChange={e => { setFiltroCategoria(e.target.value ? Number(e.target.value) : null); setPage(1); }}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
@@ -318,7 +317,6 @@ export default function Productos() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                     <option value="PRODUCTO">Producto</option>
                     <option value="SERVICIO">Servicio</option>
-                    <option value="COMPUESTO">Producto Compuesto</option>
                   </select>
                 </div>
                 <div>

@@ -147,6 +147,33 @@ export default function Layout() {
             {sidebarOpen && inventarioOpen && (
               <div className="ml-4 mt-1 space-y-1 border-l-2 border-slate-700 pl-2">
                 <button
+                  onClick={() => navigate("/app/inventario/entradas")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === "/app/inventario/entradas" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Entradas
+                </button>
+                <button
+                  onClick={() => navigate("/app/inventario/ajustes")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === "/app/inventario/ajustes" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Ajustes
+                </button>
+                <button
+                  onClick={() => navigate("/app/inventario/stock")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === "/app/inventario/stock" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Stock General
+                </button>
+                <button
                   onClick={() => navigate("/app/inventario/productos")}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     location.pathname === "/app/inventario/productos" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"

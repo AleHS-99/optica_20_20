@@ -74,6 +74,14 @@ pub fn run() {
             commands::inventario::actualizar_producto,
             commands::inventario::eliminar_producto,
             commands::inventario::obtener_producto,
+            // Entradas de Inventario (PEPS)
+            commands::entradas::crear_entrada,
+            commands::entradas::listar_entradas,
+            commands::entradas::obtener_stock_producto,
+            commands::entradas::eliminar_entrada,
+            commands::entradas::listar_stock_general,
+            commands::entradas::listar_movimientos,
+            commands::entradas::crear_salida_manual,
         ])
         .run(tauri::generate_context!())
         .expect("error mientras se ejecuta tauri");
