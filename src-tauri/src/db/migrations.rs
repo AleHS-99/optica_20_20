@@ -82,6 +82,173 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), String> {
         .await
         .map_err(|e| format!("Error creando índice: {}", e))?;
 
-    println!("✅ Migraciones ejecutadas correctamente");
+        // ============================================================
+    // MÓDULO INVENTARIO - v0.0.2
+    // ============================================================
+
+    // Categorías de productos
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS categorias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL UNIQUE,
+            descripcion TEXT NOT NULL DEFAULT '',
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla categorias: {}", e))?;
+
+    // Proveedores (opcional)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS proveedores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            telefono TEXT,
+            email TEXT,
+            direccion TEXT,
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla proveedores: {}", e))?;
+
+    // Productos (corazón del inventario)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS productos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            codigo TEXT NOT NULL UNIQUE,
+            nombre TEXT NOT NULL,
+            descripcion TEXT NOT NULL DEFAULT '',
+            categoria_id INTEGER,
+            unidad_medida TEXT NOT NULL DEFAULT 'unidad',
+            tipo TEXT NOT NULL DEFAULT 'PRODUCTO',
+            proveedor_id INTEGER,
+            stock_minimo INTEGER NOT NULL DEFAULT 0,
+            porcentaje_ganancia_default REAL NOT NULL DEFAULT 30.0,
+            precio_venta_sugerido REAL NOT NULL DEFAULT 0.0,
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (categoria_id) REFERENCES categorias(id),
+            FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla productos: {}", e))?;
+
+    // Índices para inventario
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_productos_codigo ON productos(codigo)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_productos_categoria ON productos(categoria_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_productos_tipo ON productos(tipo)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    // ============================================================
+    // MÓDULO INVENTARIO - v0.0.2
+    // ============================================================
+
+    // Categorías de productos
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS categorias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL UNIQUE,
+            descripcion TEXT NOT NULL DEFAULT '',
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla categorias: {}", e))?;
+
+    // Proveedores (opcional)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS proveedores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            telefono TEXT,
+            email TEXT,
+            direccion TEXT,
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla proveedores: {}", e))?;
+
+    // Productos (corazón del inventario)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS productos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            codigo TEXT NOT NULL UNIQUE,
+            nombre TEXT NOT NULL,
+            descripcion TEXT NOT NULL DEFAULT '',
+            categoria_id INTEGER,
+            unidad_medida TEXT NOT NULL DEFAULT 'unidad',
+            tipo TEXT NOT NULL DEFAULT 'PRODUCTO',
+            proveedor_id INTEGER,
+            stock_minimo INTEGER NOT NULL DEFAULT 0,
+            porcentaje_ganancia_default REAL NOT NULL DEFAULT 30.0,
+            precio_venta_sugerido REAL NOT NULL DEFAULT 0.0,
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (categoria_id) REFERENCES categorias(id),
+            FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla productos: {}", e))?;
+
+    // Índices para inventario
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_productos_codigo ON productos(codigo)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_productos_categoria ON productos(categoria_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_productos_tipo ON productos(tipo)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    println!("✅ Módulo Inventario inicializado");
+    
     Ok(())
 }

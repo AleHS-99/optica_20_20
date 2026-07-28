@@ -3,3 +3,4 @@ pub mod auth;
 pub mod pacientes;
 pub mod consultas;
 pub mod backup;
+pub mod inventario;

@@ -58,6 +58,22 @@ pub fn run() {
             // Backup/Restore
             commands::backup::crear_backup,
             commands::backup::restaurar_backup,
+            // Inventario - Categorías
+            commands::inventario::listar_categorias,
+            commands::inventario::crear_categoria,
+            commands::inventario::actualizar_categoria,
+            commands::inventario::eliminar_categoria,
+            // Inventario - Proveedores
+            commands::inventario::listar_proveedores,
+            commands::inventario::crear_proveedor,
+            commands::inventario::actualizar_proveedor,
+            commands::inventario::eliminar_proveedor,
+            // Inventario - Productos
+            commands::inventario::listar_productos,
+            commands::inventario::crear_producto,
+            commands::inventario::actualizar_producto,
+            commands::inventario::eliminar_producto,
+            commands::inventario::obtener_producto,
         ])
         .run(tauri::generate_context!())
         .expect("error mientras se ejecuta tauri");

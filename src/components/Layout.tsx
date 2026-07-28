@@ -11,7 +11,10 @@ import {
   X,
   ChevronDown,
   ChevronRight,
-  Database
+  Database,
+  Package,
+  Tags,
+  Truck  
 } from "lucide-react";
 import { useState } from "react";
 
@@ -40,6 +43,7 @@ export default function Layout() {
 
   // Helper para saber si una ruta está activa
   const isActive = (path: string) => location.pathname === path;
+  const [inventarioOpen, setInventarioOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -120,6 +124,54 @@ export default function Layout() {
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Histórico
+                </button>
+              </div>
+            )}
+          </div>
+          <div>
+            <button
+              onClick={() => setInventarioOpen(!inventarioOpen)}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
+                (location.pathname.startsWith("/app/inventario"))
+                  ? "bg-slate-800 text-white" 
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Package className="w-5 h-5 flex-shrink-0" />
+                {sidebarOpen && <span className="font-medium">Inventario</span>}
+              </div>
+              {sidebarOpen && (inventarioOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
+            </button>
+
+            {sidebarOpen && inventarioOpen && (
+              <div className="ml-4 mt-1 space-y-1 border-l-2 border-slate-700 pl-2">
+                <button
+                  onClick={() => navigate("/app/inventario/productos")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === "/app/inventario/productos" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Productos
+                </button>
+                <button
+                  onClick={() => navigate("/app/inventario/categorias")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === "/app/inventario/categorias" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Categorías
+                </button>
+                <button
+                  onClick={() => navigate("/app/inventario/proveedores")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === "/app/inventario/proveedores" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Proveedores
                 </button>
               </div>
             )}

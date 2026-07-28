@@ -8,6 +8,9 @@ import Pacientes from "./components/Pacientes";
 import Historico from "./components/Historico";
 import CambiarPassword from "./components/CambiarPassword";
 import BackupRestore from "./components/BackupRestore";
+import Productos from "./components/inventario/Productos";
+import Categorias from "./components/inventario/Categorias";
+import Proveedores from "./components/inventario/Proveedores";
 
 function App() {
   return (
@@ -24,6 +27,9 @@ function App() {
           <Route path="historico" element={<Historico />} />
           <Route path="password" element={<CambiarPassword />} />
           <Route path="backup" element={<BackupRestore />} />
+          <Route path="inventario/productos" element={<Productos />} />
+          <Route path="inventario/categorias" element={<Categorias />} />
+          <Route path="inventario/proveedores" element={<Proveedores />} />
         </Route>
 
         {/* Redirección por defecto para rutas desconocidas */}

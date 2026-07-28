@@ -2,3 +2,4 @@
 pub mod user;
 pub mod paciente;
 pub mod consulta;
+pub mod inventario;
