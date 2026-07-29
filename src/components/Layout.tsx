@@ -44,6 +44,7 @@ export default function Layout() {
   const isActive = (path: string) => location.pathname === path;
   const [inventarioOpen, setInventarioOpen] = useState(false);
   const [contabilidadOpen, setContabilidadOpen] = useState(false);
+  const [facturacionOpen, setFacturacionOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -203,6 +204,45 @@ export default function Layout() {
               </div>
             )}
           </div>
+          {/* Menú Desplegable: Facturación */}
+          <div>
+          <button
+            onClick={() => setFacturacionOpen(!facturacionOpen)}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
+              (location.pathname.startsWith("/app/facturacion"))
+                ? "bg-slate-800 text-white"
+                : "text-slate-300 hover:bg-slate-800 hover:text-white"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Receipt className="w-5 h-5 flex-shrink-0" />
+              {sidebarOpen && <span className="font-medium">Facturación</span>}
+            </div>
+            {sidebarOpen && (facturacionOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
+          </button>
+          {sidebarOpen && facturacionOpen && (
+            <div className="ml-4 mt-1 space-y-1 border-l-2 border-slate-700 pl-2">
+              <button
+                onClick={() => navigate("/app/facturacion/nueva")}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  location.pathname === "/app/facturacion/nueva" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                Nueva Factura
+              </button>
+              <button
+                onClick={() => navigate("/app/facturacion/lista")}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  location.pathname === "/app/facturacion/lista" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                Lista de Facturas
+              </button>
+            </div>
+          )}
+        </div>
           {/* Menú Desplegable: Contabilidad */}
           <div>
             <button

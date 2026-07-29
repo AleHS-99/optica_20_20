@@ -103,6 +103,14 @@ pub fn run() {
             commands::contabilidad::crear_impuesto,
             commands::contabilidad::actualizar_impuesto,
             commands::contabilidad::eliminar_impuesto,
+            // Facturación
+            commands::facturacion::crear_factura,
+            commands::facturacion::agregar_item_factura,
+            commands::facturacion::eliminar_item_factura,
+            commands::facturacion::registrar_pago,
+            commands::facturacion::listar_facturas,
+            commands::facturacion::obtener_factura_detalle,
+            commands::facturacion::anular_factura,
         ])
         .run(tauri::generate_context!())
         .expect("error mientras se ejecuta tauri");

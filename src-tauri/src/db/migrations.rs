@@ -331,6 +331,107 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), String> {
         .await
         .map_err(|e| format!("Error creando índice: {}", e))?;
 
+        // ============================================================
+    // MÓDULO FACTURACIÓN - v0.0.4
+    // ============================================================
+
+    // Facturas (cabecera)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS facturas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            numero TEXT NOT NULL UNIQUE,
+            paciente_id INTEGER,
+            consulta_id INTEGER,
+            fecha TEXT NOT NULL,
+            subtotal REAL NOT NULL DEFAULT 0.0,
+            descuento REAL NOT NULL DEFAULT 0.0,
+            total REAL NOT NULL DEFAULT 0.0,
+            estado TEXT NOT NULL DEFAULT 'PENDIENTE',
+            metodo_pago TEXT,
+            observaciones TEXT NOT NULL DEFAULT '',
+            usuario_id INTEGER,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (paciente_id) REFERENCES pacientes(id),
+            FOREIGN KEY (consulta_id) REFERENCES consultas(id)
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla facturas: {}", e))?;
+
+    // Detalle de factura (productos y servicios)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS detalle_factura (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            factura_id INTEGER NOT NULL,
+            tipo_item TEXT NOT NULL,
+            producto_id INTEGER,
+            descripcion TEXT NOT NULL,
+            cantidad REAL NOT NULL DEFAULT 1.0,
+            costo_unitario REAL NOT NULL DEFAULT 0.0,
+            precio_unitario REAL NOT NULL DEFAULT 0.0,
+            porcentaje_ganancia REAL NOT NULL DEFAULT 0.0,
+            subtotal REAL NOT NULL DEFAULT 0.0,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (factura_id) REFERENCES facturas(id) ON DELETE CASCADE,
+            FOREIGN KEY (producto_id) REFERENCES productos(id)
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla detalle_factura: {}", e))?;
+
+    // Pagos (abonos a facturas)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS pagos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            factura_id INTEGER NOT NULL,
+            monto REAL NOT NULL,
+            metodo_pago TEXT NOT NULL,
+            fecha TEXT NOT NULL,
+            referencia TEXT NOT NULL DEFAULT '',
+            observaciones TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (factura_id) REFERENCES facturas(id) ON DELETE CASCADE
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla pagos: {}", e))?;
+
+    // Índices para facturación
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_facturas_numero ON facturas(numero)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_facturas_fecha ON facturas(fecha)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_facturas_paciente ON facturas(paciente_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_detalle_factura ON detalle_factura(factura_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_pagos_factura ON pagos(factura_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
     
     Ok(())
 }
