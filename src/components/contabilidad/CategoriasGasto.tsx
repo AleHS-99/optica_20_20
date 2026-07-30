@@ -86,8 +86,14 @@ export default function CategoriasGasto() {
     }
   };
 
-  const tipoColor = (tipo: string) =>
-    tipo === "FIJO" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700";
+  const tipoColor = (tipo: string) => {
+    switch (tipo) {
+      case "FIJO": return "bg-blue-100 text-blue-700";
+      case "VARIABLE": return "bg-amber-100 text-amber-700";
+      case "FINANCIERO": return "bg-red-100 text-red-700";
+      default: return "bg-gray-100 text-gray-700";
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -121,7 +127,7 @@ export default function CategoriasGasto() {
                   <td className="px-4 py-3 font-medium">{c.nombre}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 text-xs rounded-full ${tipoColor(c.tipo)}`}>
-                      {c.tipo === "FIJO" ? "Fijo" : "Variable"}
+                      {c.tipo}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-600">{c.descripcion || "-"}</td>
@@ -161,6 +167,7 @@ export default function CategoriasGasto() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                   <option value="VARIABLE">Variable (gastos esporádicos)</option>
                   <option value="FIJO">Fijo (gastos mensuales recurrentes)</option>
+                  <option value="FINANCIERO">Financiero (Intereses, etc)</option>
                 </select>
               </div>
               <div>

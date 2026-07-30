@@ -329,6 +329,15 @@ export default function Layout() {
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Estado de Resultados
                 </button>
+                <button
+                  onClick={() => navigate("/app/contabilidad/analisis-costos")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === "/app/contabilidad/analisis-costos" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Análisis de Costos
+                </button>
               </div>
             )}
           </div>

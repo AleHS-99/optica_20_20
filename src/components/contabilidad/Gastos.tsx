@@ -51,8 +51,8 @@ export default function Gastos() {
   const cargarCategorias = async () => {
     try {
       const data = await invoke<CategoriaGasto[]>("listar_categorias_gasto", { soloActivas: true });
-      const categoriasVariables = data.filter(c => c.tipo === "VARIABLE");
-      setCategorias(categoriasVariables);
+      const categoriasPermitidas = data.filter(c => c.tipo === "VARIABLE" || c.tipo === "FINANCIERO" || c.tipo ==="FIJO");
+      setCategorias(categoriasPermitidas);
     } catch (e) { console.error(e); }
   };
 
@@ -189,6 +189,7 @@ export default function Gastos() {
             <option value="">Todos los tipos</option>
             <option value="FIJO">Fijo</option>
             <option value="VARIABLE">Variable</option>
+            <option value="FINANCIERO">Financiero</option>
           </select>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Desde</label>
@@ -233,7 +234,7 @@ export default function Gastos() {
                     <td className="px-4 py-3">{g.descripcion}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 text-xs rounded-full ${tipoColor(g.tipo)}`}>
-                        {g.tipo === "FIJO" ? "Fijo" : "Variable"}
+                        {g.tipo === "FIJO" ? "Fijo" : g.tipo === "FINANCIERO" ? "Financiero" : "Variable"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right font-semibold text-red-700">${g.monto.toFixed(2)}</td>

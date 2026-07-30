@@ -103,6 +103,8 @@ pub fn run() {
             commands::contabilidad::crear_impuesto,
             commands::contabilidad::actualizar_impuesto,
             commands::contabilidad::eliminar_impuesto,
+            //Contabilidad - Estado de resultados
+            commands::contabilidad::calcular_estado_resultados,
             // Facturación
             commands::facturacion::crear_factura,
             commands::facturacion::agregar_item_factura,
@@ -114,6 +116,7 @@ pub fn run() {
             // Reportes Financieros
             commands::reportes::obtener_estado_resultados,
             commands::reportes::obtener_stats_financieras,
+            commands::contabilidad::calcular_apalancamiento,
         ])
         .run(tauri::generate_context!())
         .expect("error mientras se ejecuta tauri");
