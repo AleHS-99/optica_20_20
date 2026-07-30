@@ -116,7 +116,6 @@ pub fn run() {
             // Reportes Financieros
             commands::reportes::obtener_estado_resultados,
             commands::reportes::obtener_stats_financieras,
-            commands::contabilidad::calcular_apalancamiento,
         ])
         .run(tauri::generate_context!())
         .expect("error mientras se ejecuta tauri");
