@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Swal from "sweetalert2";
-import { FileText, TrendingUp, TrendingDown, AlertTriangle, Info } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, AlertTriangle, Info, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface DatosPeriodo {
   ventas_totales: number;
@@ -46,6 +46,13 @@ export default function EstadoResultados() {
       setIncluirFijos(false);
     }
   }, [periodo, esMesActual]);
+
+  const cambiarMes = (delta: number) => {
+    const [anio, mes] = periodo.split('-').map(Number);
+    const fecha = new Date(anio, mes - 1 + delta, 1);
+    const nuevoPeriodo = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+    setPeriodo(nuevoPeriodo);
+  };
 
   const cargarReporte = async () => {
     setLoading(true);
@@ -110,14 +117,28 @@ export default function EstadoResultados() {
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <FileText className="w-6 h-6 text-blue-600" /> Estado de Resultados
         </h1>
-        <div className="flex items-center gap-3">
-          <input
-            type="month"
-            value={periodo}
-            onChange={(e) => setPeriodo(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-        </div>
+        <div className="flex items-center gap-2">
+        <button
+          onClick={() => cambiarMes(-1)}
+          className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          title="Mes anterior"
+        >
+          <ChevronLeft className="w-5 h-5 text-gray-700" />
+        </button>
+        <input
+          type="month"
+          value={periodo}
+          onChange={(e) => setPeriodo(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+        />
+        <button
+          onClick={() => cambiarMes(1)}
+          className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          title="Mes siguiente"
+        >
+          <ChevronRight className="w-5 h-5 text-gray-700" />
+        </button>
+      </div>
       </div>
 
       {/* ✅ NUEVO: Panel inteligente de gastos fijos */}

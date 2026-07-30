@@ -763,14 +763,14 @@ async fn calcular_datos_periodo(pool: &SqlitePool, periodo: &str) -> Result<Dato
 pub async fn calcular_estado_resultados(
     pool: tauri::State<'_, SqlitePool>,
     periodo: String, // Formato "YYYY-MM"
-    incluir_fijos_plantilla: Option<bool>, // ✅ NUEVO
+    incluir_fijos_plantilla: Option<bool>,
 ) -> Result<serde_json::Value, String> {
     let incluir_fijos = incluir_fijos_plantilla.unwrap_or(false);
 
-    // Calcular periodo actual
+    // 1. Calcular periodo actual
     let mut actual = calcular_datos_periodo(pool.inner(), &periodo).await?;
 
-    // ✅ SI el usuario quiere incluir los fijos de plantilla, los sumamos
+    // ✅ SOLO sumar los fijos de plantilla al periodo ACTUAL
     if incluir_fijos {
         let fijos_plantilla: (f64,) = sqlx::query_as(
             "SELECT COALESCE(SUM(monto), 0.0) FROM gastos_fijos_plantilla WHERE activo = 1"
@@ -779,26 +779,20 @@ pub async fn calcular_estado_resultados(
         .await
         .map_err(|e| e.to_string())?;
 
-        // Sumar a gastos operativos fijos
         actual.gastos_operativos_fijos += fijos_plantilla.0;
-
-        // Recalcular utilidades en cascada
         actual.utilidad_operativa = actual.utilidad_bruta 
             - actual.gastos_operativos_fijos 
             - actual.gastos_operativos_variables;
-
         actual.utilidad_antes_impuestos = actual.utilidad_operativa - actual.gastos_financieros;
-
         actual.monto_impuesto = if actual.utilidad_antes_impuestos > 0.0 {
             actual.utilidad_antes_impuestos * (actual.impuesto_porcentaje / 100.0)
         } else {
             0.0
         };
-
         actual.utilidad_neta = actual.utilidad_antes_impuestos - actual.monto_impuesto;
     }
 
-    // Calcular periodo anterior (con la MISMA configuración de fijos)
+    // 2. Calcular periodo anterior (SIN sumar plantilla - ya deberían estar registrados)
     let partes: Vec<&str> = periodo.split('-').collect();
     let anio: i32 = partes[0].parse().unwrap_or(2024);
     let mut mes: i32 = partes[1].parse().unwrap_or(1);
@@ -809,55 +803,15 @@ pub async fn calcular_estado_resultados(
         anio_ant -= 1;
     }
     let periodo_anterior = format!("{:04}-{:02}", anio_ant, mes);
-    let mut anterior = calcular_datos_periodo(pool.inner(), &periodo_anterior).await?;
+    let anterior = calcular_datos_periodo(pool.inner(), &periodo_anterior).await?;
+    // ✅ NO sumamos la plantilla aquí - los gastos fijos del mes anterior ya deberían estar registrados
 
-    if incluir_fijos {
-        let fijos_plantilla: (f64,) = sqlx::query_as(
-            "SELECT COALESCE(SUM(monto), 0.0) FROM gastos_fijos_plantilla WHERE activo = 1"
-        )
-        .fetch_one(pool.inner())
-        .await
-        .map_err(|e| e.to_string())?;
-
-        anterior.gastos_operativos_fijos += fijos_plantilla.0;
-        anterior.utilidad_operativa = anterior.utilidad_bruta 
-            - anterior.gastos_operativos_fijos 
-            - anterior.gastos_operativos_variables;
-        anterior.utilidad_antes_impuestos = anterior.utilidad_operativa - anterior.gastos_financieros;
-        anterior.monto_impuesto = if anterior.utilidad_antes_impuestos > 0.0 {
-            anterior.utilidad_antes_impuestos * (anterior.impuesto_porcentaje / 100.0)
-        } else {
-            0.0
-        };
-        anterior.utilidad_neta = anterior.utilidad_antes_impuestos - anterior.monto_impuesto;
-    }
-
-    // Calcular mismo mes del año anterior
+    // 3. Calcular mismo mes del año anterior (SIN sumar plantilla)
     let periodo_anio_anterior = format!("{:04}-{:02}", anio - 1, partes[1].parse::<i32>().unwrap_or(1));
-    let mut anio_ant_data = calcular_datos_periodo(pool.inner(), &periodo_anio_anterior).await?;
+    let anio_ant_data = calcular_datos_periodo(pool.inner(), &periodo_anio_anterior).await?;
+    // ✅ NO sumamos la plantilla aquí tampoco
 
-    if incluir_fijos {
-        let fijos_plantilla: (f64,) = sqlx::query_as(
-            "SELECT COALESCE(SUM(monto), 0.0) FROM gastos_fijos_plantilla WHERE activo = 1"
-        )
-        .fetch_one(pool.inner())
-        .await
-        .map_err(|e| e.to_string())?;
-
-        anio_ant_data.gastos_operativos_fijos += fijos_plantilla.0;
-        anio_ant_data.utilidad_operativa = anio_ant_data.utilidad_bruta 
-            - anio_ant_data.gastos_operativos_fijos 
-            - anio_ant_data.gastos_operativos_variables;
-        anio_ant_data.utilidad_antes_impuestos = anio_ant_data.utilidad_operativa - anio_ant_data.gastos_financieros;
-        anio_ant_data.monto_impuesto = if anio_ant_data.utilidad_antes_impuestos > 0.0 {
-            anio_ant_data.utilidad_antes_impuestos * (anio_ant_data.impuesto_porcentaje / 100.0)
-        } else {
-            0.0
-        };
-        anio_ant_data.utilidad_neta = anio_ant_data.utilidad_antes_impuestos - anio_ant_data.monto_impuesto;
-    }
-
-    // Obtener total de fijos de plantilla para mostrarlo en el frontend
+    // 4. Obtener total de fijos de plantilla para mostrarlo en el frontend
     let total_fijos_plantilla: (f64,) = sqlx::query_as(
         "SELECT COALESCE(SUM(monto), 0.0) FROM gastos_fijos_plantilla WHERE activo = 1"
     )
