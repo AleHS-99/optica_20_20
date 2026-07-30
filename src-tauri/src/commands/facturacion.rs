@@ -59,7 +59,59 @@ pub async fn crear_factura(
     }))
 }
 
-/// Agrega un item (producto o servicio) a la factura
+/// Función auxiliar para restaurar stock (usada al eliminar items o anular facturas)
+async fn restaurar_stock_producto(
+    pool: &SqlitePool,
+    producto_id: i64,
+    cantidad: f64,
+    costo_unitario: f64,
+    factura_id: i64,
+) -> Result<(), String> {
+    let ahora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+    // En óptica las cantidades suelen ser enteras (1 montura, 2 lentes). Redondeamos por seguridad.
+    let cantidad_i64 = cantidad.round() as i64; 
+
+    // 1. Crear un nuevo lote de "entrada" por anulación
+    let lote_result = sqlx::query(
+        "INSERT INTO lotes_inventario 
+         (producto_id, cantidad_inicial, cantidad_restante, costo_unitario, 
+          fecha_entrada, numero_factura_compra, observaciones)
+         VALUES (?, ?, ?, ?, ?, ?, ?)"
+    )
+    .bind(producto_id)
+    .bind(cantidad_i64)
+    .bind(cantidad_i64)
+    .bind(costo_unitario)
+    .bind(&ahora)
+    .bind(format!("ANULACION-FAC-{}", factura_id))
+    .bind(format!("Restauración por anulación/eliminación de factura {}", factura_id))
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando lote de restauración: {}", e))?;
+
+    let lote_id = lote_result.last_insert_rowid();
+
+    // 2. Crear movimiento de restauración
+    sqlx::query(
+        "INSERT INTO movimientos_inventario 
+         (producto_id, lote_id, tipo, cantidad, costo_unitario, 
+          referencia_tipo, referencia_id, motivo, fecha)
+         VALUES (?, ?, 'ANULACION_VENTA', ?, ?, 'FACTURA', ?, ?, ?)"
+    )
+    .bind(producto_id)
+    .bind(lote_id)
+    .bind(cantidad_i64) // Cantidad positiva porque entra al inventario
+    .bind(costo_unitario)
+    .bind(factura_id)
+    .bind(format!("Restauración de {} unidades", cantidad))
+    .bind(&ahora)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando movimiento de restauración: {}", e))?;
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn agregar_item_factura(
     pool: tauri::State<'_, SqlitePool>,
@@ -75,6 +127,97 @@ pub async fn agregar_item_factura(
         return Err("El precio no puede ser negativo".to_string());
     }
 
+    // === LÓGICA DE INVENTARIO PARA PRODUCTOS ===
+    if datos.tipo_item == "PRODUCTO" {
+        if let Some(prod_id) = datos.producto_id {
+            // 1. Validar que sea un producto real (no servicio ni compuesto)
+            let tipo_prod: Option<(String,)> = sqlx::query_as(
+                "SELECT tipo FROM productos WHERE id = ?"
+            )
+            .bind(prod_id)
+            .fetch_optional(pool.inner())
+            .await
+            .map_err(|e| e.to_string())?;
+
+            match tipo_prod {
+                Some((t,)) if t == "PRODUCTO" => {} // OK
+                Some((t,)) => return Err(format!("El item debe ser de tipo PRODUCTO, no {}", t)),
+                None => return Err("Producto no encontrado".to_string()),
+            }
+
+            // 2. Verificar stock disponible
+            let stock: Option<(i64,)> = sqlx::query_as(
+                "SELECT COALESCE(SUM(cantidad_restante), 0) FROM lotes_inventario WHERE producto_id = ? AND activo = 1"
+            )
+            .bind(prod_id)
+            .fetch_optional(pool.inner())
+            .await
+            .map_err(|e| e.to_string())?;
+
+            let stock_actual = stock.map(|s| s.0).unwrap_or(0);
+            let cantidad_i64 = datos.cantidad.round() as i64;
+
+            if stock_actual < cantidad_i64 {
+                return Err(format!(
+                    "Stock insuficiente para {}. Disponible: {}, Requerido: {}",
+                    datos.descripcion, stock_actual, cantidad_i64
+                ));
+            }
+
+            // 3. Descontar usando PEPS
+            let mut cantidad_restante = cantidad_i64;
+            let lotes: Vec<(i64, i64, f64)> = sqlx::query_as(
+                "SELECT id, cantidad_restante, costo_unitario FROM lotes_inventario 
+                 WHERE producto_id = ? AND activo = 1 AND cantidad_restante > 0
+                 ORDER BY fecha_entrada ASC, id ASC"
+            )
+            .bind(prod_id)
+            .fetch_all(pool.inner())
+            .await
+            .map_err(|e| e.to_string())?;
+
+            let ahora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+            for (lote_id, cantidad_lote, costo_unit) in lotes {
+                if cantidad_restante <= 0 {
+                    break;
+                }
+                let descontar = std::cmp::min(cantidad_restante, cantidad_lote);
+
+                // Actualizar lote
+                sqlx::query(
+                    "UPDATE lotes_inventario SET cantidad_restante = cantidad_restante - ?, updated_at = ? WHERE id = ?"
+                )
+                .bind(descontar)
+                .bind(&ahora)
+                .bind(lote_id)
+                .execute(pool.inner())
+                .await
+                .map_err(|e| e.to_string())?;
+
+                // Crear movimiento de VENTA
+                sqlx::query(
+                    "INSERT INTO movimientos_inventario 
+                     (producto_id, lote_id, tipo, cantidad, costo_unitario, referencia_tipo, referencia_id, motivo, fecha)
+                     VALUES (?, ?, 'VENTA', ?, ?, 'FACTURA', ?, ?, ?)"
+                )
+                .bind(prod_id)
+                .bind(lote_id)
+                .bind(-descontar) // Negativo porque sale
+                .bind(costo_unit)
+                .bind(datos.factura_id)
+                .bind(format!("Venta en factura"))
+                .bind(&ahora)
+                .execute(pool.inner())
+                .await
+                .map_err(|e| e.to_string())?;
+
+                cantidad_restante -= descontar;
+            }
+        }
+    }
+
+    // === GUARDAR EL DETALLE ===
     let subtotal = datos.cantidad * datos.precio_unitario;
 
     let result = sqlx::query(
@@ -94,51 +237,60 @@ pub async fn agregar_item_factura(
     .await
     .map_err(|e| format!("Error agregando item: {}", e))?;
 
-    // Recalcular totales de la factura
     recalcular_totales_factura(pool.inner(), datos.factura_id).await?;
 
     Ok(serde_json::json!({
         "success": true,
         "detalle_id": result.last_insert_rowid(),
-        "message": "Item agregado a la factura"
+        "message": "Item agregado y inventario actualizado"
     }))
 }
 
-/// Elimina un item de la factura
+/// Elimina un item de la factura Y restaura el inventario si era un producto
 #[tauri::command]
 pub async fn eliminar_item_factura(
     pool: tauri::State<'_, SqlitePool>,
     detalle_id: i64,
 ) -> Result<serde_json::Value, String> {
-    // Obtener el detalle para saber a qué factura pertenece
-    let detalle: Option<(i64,)> = sqlx::query_as(
-        "SELECT factura_id FROM detalle_factura WHERE id = ?"
+    let detalle: Option<(i64, String, Option<i64>, f64, f64)> = sqlx::query_as(
+        "SELECT factura_id, tipo_item, producto_id, cantidad, costo_unitario FROM detalle_factura WHERE id = ?"
     )
     .bind(detalle_id)
     .fetch_optional(pool.inner())
     .await
     .map_err(|e| e.to_string())?;
 
-    let factura_id = match detalle {
-        Some((fid,)) => fid,
+    let (factura_id, tipo_item, producto_id, cantidad, costo_unitario) = match detalle {
+        Some(d) => d,
         None => return Err("Detalle no encontrado".to_string()),
     };
 
+    // Si era un producto, restaurar el stock
+    if tipo_item == "PRODUCTO" && producto_id.is_some() {
+        restaurar_stock_producto(
+            pool.inner(),
+            producto_id.unwrap(),
+            cantidad,
+            costo_unitario,
+            factura_id,
+        )
+        .await?;
+    }
+
+    // Eliminar el detalle
     sqlx::query("DELETE FROM detalle_factura WHERE id = ?")
         .bind(detalle_id)
         .execute(pool.inner())
         .await
         .map_err(|e| format!("Error eliminando item: {}", e))?;
 
-    // Recalcular totales
     recalcular_totales_factura(pool.inner(), factura_id).await?;
 
     Ok(serde_json::json!({
         "success": true,
-        "message": "Item eliminado de la factura"
+        "message": "Item eliminado y stock restaurado"
     }))
 }
-
 /// Recalcula los totales de una factura (subtotal, total)
 /// Nota: Los impuestos NO se calculan aquí, se aplican al cierre contable
 async fn recalcular_totales_factura(pool: &SqlitePool, factura_id: i64) -> Result<(), String> {
@@ -418,13 +570,12 @@ pub async fn obtener_factura_detalle(
     }))
 }
 
-/// Anula una factura (cambia su estado a ANULADA)
+/// Anula una factura completa: cambia estado y restaura TODO el stock de productos
 #[tauri::command]
 pub async fn anular_factura(
     pool: tauri::State<'_, SqlitePool>,
     factura_id: i64,
 ) -> Result<serde_json::Value, String> {
-    // Verificar que la factura existe y no está ya anulada
     let factura: Option<(String,)> = sqlx::query_as(
         "SELECT estado FROM facturas WHERE id = ?"
     )
@@ -442,8 +593,24 @@ pub async fn anular_factura(
         return Err("La factura ya está anulada".to_string());
     }
 
+    // 1. Obtener todos los items de tipo PRODUCTO de esta factura
+    let items: Vec<(i64, f64, f64)> = sqlx::query_as(
+        "SELECT producto_id, cantidad, costo_unitario FROM detalle_factura 
+         WHERE factura_id = ? AND tipo_item = 'PRODUCTO' AND producto_id IS NOT NULL"
+    )
+    .bind(factura_id)
+    .fetch_all(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    // 2. Restaurar el stock de cada uno
+    for (prod_id, cantidad, costo) in items {
+        restaurar_stock_producto(pool.inner(), prod_id, cantidad, costo, factura_id).await?;
+    }
+
     let ahora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
+    // 3. Marcar factura como anulada
     sqlx::query(
         "UPDATE facturas SET estado = 'ANULADA', updated_at = ? WHERE id = ?"
     )
@@ -453,8 +620,15 @@ pub async fn anular_factura(
     .await
     .map_err(|e| format!("Error anulando factura: {}", e))?;
 
+    // 4. (Opcional pero recomendado) Eliminar pagos asociados para que no distorsionen reportes
+    sqlx::query("DELETE FROM pagos WHERE factura_id = ?")
+        .bind(factura_id)
+        .execute(pool.inner())
+        .await
+        .map_err(|e| format!("Error limpiando pagos: {}", e))?;
+
     Ok(serde_json::json!({
         "success": true,
-        "message": "Factura anulada correctamente"
+        "message": "Factura anulada y stock restaurado correctamente"
     }))
 }

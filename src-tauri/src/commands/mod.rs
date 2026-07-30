@@ -7,3 +7,4 @@ pub mod inventario;
 pub mod entradas;
 pub mod contabilidad;
 pub mod facturacion;
+pub mod reportes;

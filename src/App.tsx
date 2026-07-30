@@ -21,6 +21,7 @@ import Impuestos from "./components/contabilidad/Impuestos";
 import ListaFacturas from "./components/facturacion/ListaFacturas";
 import NuevaFactura from "./components/facturacion/NuevaFactura";
 import DetalleFactura from "./components/facturacion/DetalleFactura";
+import EstadoResultados from "./components/reportes/EstadoResultados";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
           <Route path="facturacion/lista" element={<ListaFacturas />} />
           <Route path="facturacion/nueva" element={<NuevaFactura />} />
           <Route path="facturacion/detalle/:id" element={<DetalleFactura />} />
+          <Route path="reportes/estado-resultados" element={<EstadoResultados />} />
         </Route>
 
         {/* Redirección por defecto para rutas desconocidas */}
