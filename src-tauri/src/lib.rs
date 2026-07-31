@@ -114,8 +114,10 @@ pub fn run() {
             commands::facturacion::obtener_factura_detalle,
             commands::facturacion::anular_factura,
             // Reportes Financieros
-            commands::reportes::obtener_estado_resultados,
             commands::reportes::obtener_stats_financieras,
+            // Períodos Contables
+            commands::periodos::listar_periodos,
+            commands::periodos::obtener_ultimo_cierre,
         ])
         .run(tauri::generate_context!())
         .expect("error mientras se ejecuta tauri");

@@ -150,6 +150,40 @@ pub async fn eliminar_paciente(
     pool: tauri::State<'_, SqlitePool>,
     id: i64,
 ) -> Result<serde_json::Value, String> {
+    // ✅ NUEVO: Verificar si el paciente tiene facturas asociadas
+    let facturas_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM facturas WHERE paciente_id = ?"
+    )
+    .bind(id)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    if facturas_count.0 > 0 {
+        return Err(format!(
+            "No se puede eliminar: este paciente tiene {} factura(s) asociada(s). \
+             Las facturas son registros contables que no pueden quedar sin paciente.",
+            facturas_count.0
+        ));
+    }
+
+    // Verificar si tiene consultas
+    let consultas_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM consultas WHERE paciente_id = ?"
+    )
+    .bind(id)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    if consultas_count.0 > 0 {
+        return Err(format!(
+            "No se puede eliminar: este paciente tiene {} consulta(s). \
+             Elimine primero las consultas.",
+            consultas_count.0
+        ));
+    }
+
     sqlx::query("DELETE FROM pacientes WHERE id = ?")
         .bind(id)
         .execute(pool.inner())

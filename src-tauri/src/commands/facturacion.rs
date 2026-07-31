@@ -34,6 +34,7 @@ pub async fn crear_factura(
     };
 
     let numero = generar_numero_factura(pool.inner()).await?;
+    crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &fecha).await?;
 
     // ✅ CORREGIDO: Sin impuesto_id
     let result = sqlx::query(

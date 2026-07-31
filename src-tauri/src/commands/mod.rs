@@ -8,3 +8,4 @@ pub mod entradas;
 pub mod contabilidad;
 pub mod facturacion;
 pub mod reportes;
+pub mod periodos;

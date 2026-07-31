@@ -5,3 +5,4 @@ pub mod consulta;
 pub mod inventario;
 pub mod contabilidad;
 pub mod facturacion;
+pub mod cierre;

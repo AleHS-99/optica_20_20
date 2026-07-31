@@ -90,54 +90,36 @@ pub async fn obtener_historico_paciente(
 #[tauri::command]
 pub async fn eliminar_consulta(
     pool: tauri::State<'_, SqlitePool>,
-    consulta_id: i64,
+    id: i64,
 ) -> Result<serde_json::Value, String> {
-    // Obtener la consulta
-    let consulta: Option<Consulta> = sqlx::query_as("SELECT * FROM consultas WHERE id = ?")
-        .bind(consulta_id)
-        .fetch_optional(pool.inner())
-        .await
-        .map_err(|e| e.to_string())?;
-
-    let consulta = match consulta {
-        Some(c) => c,
-        None => return Err("Consulta no encontrada".to_string()),
-    };
-
-    // Verificar que sea del día actual
-    let hoy = Local::now().format("%Y-%m-%d").to_string();
-    let fecha_consulta = &consulta.created_at[..10];
-    if fecha_consulta != hoy {
-        return Err("Solo se pueden eliminar consultas del día actual".to_string());
-    }
-
-    // Verificar que sea la última consulta del paciente
-    let ultima: Option<Consulta> = sqlx::query_as(
-        "SELECT * FROM consultas WHERE paciente_id = ? ORDER BY created_at DESC LIMIT 1",
+    // ✅ NUEVO: Verificar si la consulta tiene facturas asociadas
+    let facturas_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM facturas WHERE consulta_id = ?"
     )
-    .bind(consulta.paciente_id)
-    .fetch_optional(pool.inner())
+    .bind(id)
+    .fetch_one(pool.inner())
     .await
     .map_err(|e| e.to_string())?;
 
-    match ultima {
-        Some(u) if u.id == consulta_id => {
-            // Es la última, podemos eliminar
-            sqlx::query("DELETE FROM consultas WHERE id = ?")
-                .bind(consulta_id)
-                .execute(pool.inner())
-                .await
-                .map_err(|e| format!("Error eliminando consulta: {}", e))?;
-
-            Ok(serde_json::json!({
-                "success": true,
-                "message": "Consulta eliminada correctamente"
-            }))
-        }
-        _ => Err("Solo se puede eliminar la última consulta".to_string()),
+    if facturas_count.0 > 0 {
+        return Err(format!(
+            "No se puede eliminar: esta consulta tiene {} factura(s) asociada(s). \
+             Las facturas son registros contables que no pueden quedar sin consulta.",
+            facturas_count.0
+        ));
     }
-}
 
+    sqlx::query("DELETE FROM consultas WHERE id = ?")
+        .bind(id)
+        .execute(pool.inner())
+        .await
+        .map_err(|e| format!("Error eliminando consulta: {}", e))?;
+
+    Ok(serde_json::json!({
+        "success": true,
+        "message": "Consulta eliminada correctamente"
+    }))
+}
 /// Obtiene el detalle completo de una consulta
 #[tauri::command]
 pub async fn obtener_detalle_consulta(

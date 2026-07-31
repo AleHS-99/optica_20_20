@@ -269,6 +269,14 @@ pub async fn crear_gasto(
     if datos.monto <= 0.0 {
         return Err("El monto debe ser mayor a 0".to_string());
     }
+    // Determinar la fecha a usar (la del formulario o la actual)
+    let ahora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+    let fecha_uso = match datos.fecha {
+        Some(ref f) if f.len() == 10 => format!("{} {}", f, &ahora[11..]),
+        Some(f) => f,
+        None => ahora.clone(),
+    };
+    crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &fecha_uso).await?;
 
     // Verificar que la categoría existe
     let cat: Option<(String,)> = sqlx::query_as(
@@ -283,12 +291,6 @@ pub async fn crear_gasto(
         return Err("Categoría de gasto no encontrada".to_string());
     }
 
-    let ahora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
-    let fecha = match datos.fecha {
-        Some(f) if f.len() == 10 => format!("{} {}", f, &ahora[11..]),
-        Some(f) => f,
-        None => ahora.clone(),
-    };
 
     let tipo = datos.tipo.unwrap_or_else(|| "VARIABLE".to_string());
 
@@ -299,7 +301,7 @@ pub async fn crear_gasto(
     .bind(datos.categoria_id)
     .bind(datos.descripcion.trim())
     .bind(datos.monto)
-    .bind(&fecha)
+    .bind(&fecha_uso)
     .bind(&tipo)
     .execute(pool.inner())
     .await
@@ -672,7 +674,7 @@ pub struct DatosPeriodo {
 }
 
 /// Función auxiliar para calcular los datos de un periodo específico (formato "YYYY-MM")
-async fn calcular_datos_periodo(pool: &SqlitePool, periodo: &str) -> Result<DatosPeriodo, String> {
+pub(crate) async fn calcular_datos_periodo(pool: &SqlitePool, periodo: &str) -> Result<DatosPeriodo, String> {
     // 1. Ventas Totales y Costo de Ventas (solo facturas no anuladas)
     let ventas_cogs: (f64, f64) = sqlx::query_as(
         "SELECT 

@@ -432,6 +432,44 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), String> {
         .await
         .map_err(|e| format!("Error creando índice: {}", e))?;
 
+        // ============================================================
+    // MÓDULO CIERRES CONTABLES - v0.0.5
+    // ============================================================
+
+    // Períodos contables (cierres mensuales/anuales)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS periodos_contables (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            periodo TEXT NOT NULL UNIQUE,
+            nombre TEXT NOT NULL,
+            estado TEXT NOT NULL DEFAULT 'ABIERTO',
+            fecha_cierre TEXT,
+            usuario_cierre TEXT,
+            ventas_totales_cerradas REAL NOT NULL DEFAULT 0.0,
+            gastos_totales_cerrados REAL NOT NULL DEFAULT 0.0,
+            utilidad_neta_cerrada REAL NOT NULL DEFAULT 0.0,
+            observaciones TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Error creando tabla periodos_contables: {}", e))?;
+
+    // Índice único para búsquedas rápidas por período
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_periodos_periodo ON periodos_contables(periodo)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_periodos_estado ON periodos_contables(estado)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Error creando índice: {}", e))?;
+
     
     Ok(())
 }
