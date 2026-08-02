@@ -135,21 +135,6 @@ pub struct LoteConDetalles {
 }
 
 // ============ MOVIMIENTOS ============
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct MovimientoInventario {
-    pub id: i64,
-    pub producto_id: i64,
-    pub lote_id: Option<i64>,
-    pub tipo: String,
-    pub cantidad: i64,
-    pub costo_unitario: f64,
-    pub referencia_tipo: Option<String>,
-    pub referencia_id: Option<i64>,
-    pub motivo: String,
-    pub usuario_id: Option<i64>,
-    pub fecha: String,
-    pub created_at: String,
-}
 
 // Struct para listar stock actual por producto
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

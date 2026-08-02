@@ -3,23 +3,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 // ============ FACTURAS ============
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct Factura {
-    pub id: i64,
-    pub numero: String,
-    pub paciente_id: Option<i64>,
-    pub consulta_id: Option<i64>,
-    pub fecha: String,
-    pub subtotal: f64,
-    pub descuento: f64,
-    pub total: f64,
-    pub estado: String,
-    pub metodo_pago: Option<String>,
-    pub observaciones: String,
-    pub usuario_id: Option<i64>,
-    pub created_at: String,
-    pub updated_at: String,
-}
 
 #[derive(Debug, Deserialize)]
 pub struct NuevaFactura {

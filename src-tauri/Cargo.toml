@@ -36,3 +36,4 @@ rand = "0.8"
 thiserror = "1"
 chrono = { version = "0.4", features = ["serde"] }
 tauri-plugin-dialog = "2.7.2"
+genpdf = "0.2.0"

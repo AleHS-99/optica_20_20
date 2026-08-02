@@ -22,18 +22,7 @@ pub struct NuevaCategoriaGasto {
 }
 
 // ============ GASTOS ============
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct Gasto {
-    pub id: i64,
-    pub categoria_id: i64,
-    pub descripcion: String,
-    pub monto: f64,
-    pub fecha: String,
-    pub tipo: String,
-    pub es_autogenerado: i32,
-    pub created_at: String,
-    pub updated_at: String,
-}
+
 
 #[derive(Debug, Deserialize)]
 pub struct NuevoGasto {
@@ -59,16 +48,6 @@ pub struct GastoConCategoria {
 }
 
 // ============ PLANTILLA DE GASTOS FIJOS ============
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct GastoFijoPlantilla {
-    pub id: i64,
-    pub categoria_id: i64,
-    pub descripcion: String,
-    pub monto: f64,
-    pub activo: i32,
-    pub created_at: String,
-    pub updated_at: String,
-}
 
 #[derive(Debug, Deserialize)]
 pub struct NuevoGastoFijo {

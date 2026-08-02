@@ -24,6 +24,7 @@ interface ReporteData {
   anio_anterior: DatosPeriodo;
   total_fijos_plantilla: number;
   incluir_fijos_plantilla: boolean;
+  periodo_cerrado: boolean;
 }
 
 export default function EstadoResultados() {
@@ -32,9 +33,8 @@ export default function EstadoResultados() {
   const [data, setData] = useState<ReporteData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Detectar si el periodo seleccionado es el mes actual
-  const mesActual = new Date().toISOString().slice(0, 7);
-  const esMesActual = periodo === mesActual;
+  // Detectar si el periodo seleccionado esta cerrado
+  const periodoCerrado = data?.periodo_cerrado || false;
 
   useEffect(() => {
     cargarReporte();
@@ -42,10 +42,10 @@ export default function EstadoResultados() {
 
   // ✅ Si el usuario cambia a un mes anterior, desactivar el checkbox automáticamente
   useEffect(() => {
-    if (!esMesActual) {
+    if (!periodoCerrado) {
       setIncluirFijos(false);
     }
-  }, [periodo, esMesActual]);
+  }, [periodo, periodoCerrado]);
 
   const cambiarMes = (delta: number) => {
     const [anio, mes] = periodo.split('-').map(Number);
@@ -60,7 +60,7 @@ export default function EstadoResultados() {
       // ✅ Solo enviar el parámetro si es el mes actual
       const response: any = await invoke("calcular_estado_resultados", {
         periodo,
-        incluirFijosPlantilla: esMesActual ? incluirFijos : false
+        incluirFijosPlantilla: periodoCerrado ? incluirFijos : false
       });
       setData(response);
     } catch (e: any) {
@@ -142,7 +142,7 @@ export default function EstadoResultados() {
       </div>
 
       {/* ✅ NUEVO: Panel inteligente de gastos fijos */}
-      {esMesActual ? (
+      {!periodoCerrado ? (
         // CASO 1: Mes actual (abierto) → Mostrar checkbox funcional
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
           <label className="flex items-start gap-3 cursor-pointer">
@@ -178,7 +178,7 @@ export default function EstadoResultados() {
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 flex gap-3">
           <Info className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-green-800">
-            <p className="font-semibold">Periodo anterior analizado</p>
+            <p className="font-semibold">Periodo Cerrado</p>
             <p className="mt-1">
               Los gastos fijos de este periodo <strong>ya están incluidos</strong> en los registros contables. 
               No es necesario aplicar la plantilla nuevamente.
@@ -230,7 +230,7 @@ export default function EstadoResultados() {
               </td>
             </tr>
             <Fila 
-              label={`Gastos Fijos${esMesActual && incluirFijos ? ' (incluye plantilla)' : ' (registrados)'}`} 
+              label={`Gastos Fijos${periodoCerrado && incluirFijos ? ' (incluye plantilla)' : ' (registrados)'}`} 
               actual={actual.gastos_operativos_fijos} 
               anterior={anterior.gastos_operativos_fijos} 
               esSubtotal 

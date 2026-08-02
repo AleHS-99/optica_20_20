@@ -350,7 +350,7 @@ pub async fn actualizar_gasto(
         Some(f) => f,
         None => ahora.clone(),
     };
-
+    crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &fecha).await?;
     let tipo = datos.tipo.unwrap_or_else(|| "VARIABLE".to_string());
 
     sqlx::query(
@@ -378,9 +378,9 @@ pub async fn eliminar_gasto(
     pool: tauri::State<'_, SqlitePool>,
     id: i64,
 ) -> Result<serde_json::Value, String> {
-    // Verificar que no sea autogenerado
-    let gasto: Option<(i32,)> = sqlx::query_as(
-        "SELECT es_autogenerado FROM gastos WHERE id = ?"
+    // ✅ Obtenemos tanto el flag de autogenerado como la fecha del gasto
+    let gasto: Option<(i32, String)> = sqlx::query_as(
+        "SELECT es_autogenerado, fecha FROM gastos WHERE id = ?"
     )
     .bind(id)
     .fetch_optional(pool.inner())
@@ -388,11 +388,13 @@ pub async fn eliminar_gasto(
     .map_err(|e| e.to_string())?;
 
     match gasto {
-        Some((autogen,)) if autogen == 1 => {
-            return Err("No se puede eliminar un gasto autogenerado. Desactívalo de la plantilla.".to_string());
+        Some((autogen, _)) if autogen == 1 => {
+            return Err("No se puede eliminar un gasto autogenerado. Desactívalo desde la plantilla de gastos fijos.".to_string());
+        }
+        Some((_, fecha_gasto)) => {
+            crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &fecha_gasto).await?;
         }
         None => return Err("Gasto no encontrado".to_string()),
-        _ => {}
     }
 
     sqlx::query("DELETE FROM gastos WHERE id = ?")
@@ -406,7 +408,6 @@ pub async fn eliminar_gasto(
         "message": "Gasto eliminado correctamente"
     }))
 }
-
 // ============================================================
 // PLANTILLA DE GASTOS FIJOS
 // ============================================================
@@ -772,7 +773,7 @@ pub async fn calcular_estado_resultados(
     // 1. Calcular periodo actual
     let mut actual = calcular_datos_periodo(pool.inner(), &periodo).await?;
 
-    // ✅ SOLO sumar los fijos de plantilla al periodo ACTUAL
+    // SOLO sumar los fijos de plantilla al periodo ACTUAL
     if incluir_fijos {
         let fijos_plantilla: (f64,) = sqlx::query_as(
             "SELECT COALESCE(SUM(monto), 0.0) FROM gastos_fijos_plantilla WHERE activo = 1"
@@ -821,11 +822,23 @@ pub async fn calcular_estado_resultados(
     .await
     .map_err(|e| e.to_string())?;
 
+    // NUEVO: Verificar si el periodo está cerrado
+    let periodo_cerrado: Option<(String,)> = sqlx::query_as(
+        "SELECT nombre FROM periodos_contables WHERE periodo = ? AND estado = 'CERRADO'"
+    )
+    .bind(&periodo)
+    .fetch_optional(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let esta_cerrado = periodo_cerrado.is_some();
+
     Ok(serde_json::json!({
         "actual": actual,
         "anterior": anterior,
         "anio_anterior": anio_ant_data,
         "total_fijos_plantilla": total_fijos_plantilla.0,
-        "incluir_fijos_plantilla": incluir_fijos
+        "incluir_fijos_plantilla": incluir_fijos,
+        "periodo_cerrado": esta_cerrado
     }))
 }

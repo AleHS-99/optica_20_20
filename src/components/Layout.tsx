@@ -14,7 +14,7 @@ import {
   Database,
   Package,
   Receipt,
-  BarChart3
+  BarChart3,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -52,30 +52,37 @@ export default function Layout() {
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <aside
-        className={`${
-          sidebarOpen ? "w-64" : "w-20"
-        } bg-slate-900 text-white transition-all duration-300 flex flex-col`}
+        className={`${sidebarOpen ? "w-64" : "w-20"
+          } bg-slate-900 text-white transition-all duration-300 flex flex-col`}
       >
         {/* Logo / Toggle */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
-          {sidebarOpen && <span className="text-xl font-bold text-blue-400">Óptica 20/20</span>}
+          {sidebarOpen && (
+            <span className="text-xl font-bold text-blue-400">
+              Óptica 20/20
+            </span>
+          )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1 rounded hover:bg-slate-700 transition"
           >
-            {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {sidebarOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </div>
 
         {/* Menú de Navegación */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-
           {/* Dashboard */}
           <button
             onClick={() => navigate("/app")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-              isActive("/app") ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive("/app")
+                ? "bg-blue-600 text-white"
+                : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
           >
             <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span className="font-medium">Dashboard</span>}
@@ -85,17 +92,23 @@ export default function Layout() {
           <div>
             <button
               onClick={() => setClinicaOpen(!clinicaOpen)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
-                (isActive("/app/consulta") || isActive("/app/pacientes") || isActive("/app/historico"))
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${isActive("/app/consulta") ||
+                  isActive("/app/pacientes") ||
+                  isActive("/app/historico")
                   ? "bg-slate-800 text-white"
                   : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 <Stethoscope className="w-5 h-5 flex-shrink-0" />
                 {sidebarOpen && <span className="font-medium">Clínica</span>}
               </div>
-              {sidebarOpen && (clinicaOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
+              {sidebarOpen &&
+                (clinicaOpen ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                ))}
             </button>
 
             {/* Submenú de Clínica */}
@@ -103,27 +116,30 @@ export default function Layout() {
               <div className="ml-4 mt-1 space-y-1 border-l-2 border-slate-700 pl-2">
                 <button
                   onClick={() => navigate("/app/consulta")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    isActive("/app/consulta") ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/app/consulta")
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Nueva Consulta
                 </button>
                 <button
                   onClick={() => navigate("/app/pacientes")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    isActive("/app/pacientes") ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/app/pacientes")
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Pacientes
                 </button>
                 <button
                   onClick={() => navigate("/app/historico")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    isActive("/app/historico") ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/app/historico")
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Histórico
@@ -134,71 +150,81 @@ export default function Layout() {
           <div>
             <button
               onClick={() => setInventarioOpen(!inventarioOpen)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
-                (location.pathname.startsWith("/app/inventario"))
-                  ? "bg-slate-800 text-white" 
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${location.pathname.startsWith("/app/inventario")
+                  ? "bg-slate-800 text-white"
                   : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 <Package className="w-5 h-5 flex-shrink-0" />
                 {sidebarOpen && <span className="font-medium">Inventario</span>}
               </div>
-              {sidebarOpen && (inventarioOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
+              {sidebarOpen &&
+                (inventarioOpen ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                ))}
             </button>
 
             {sidebarOpen && inventarioOpen && (
               <div className="ml-4 mt-1 space-y-1 border-l-2 border-slate-700 pl-2">
                 <button
                   onClick={() => navigate("/app/inventario/entradas")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/inventario/entradas" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/inventario/entradas"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Entradas
                 </button>
                 <button
                   onClick={() => navigate("/app/inventario/ajustes")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/inventario/ajustes" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/inventario/ajustes"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Ajustes
                 </button>
                 <button
                   onClick={() => navigate("/app/inventario/stock")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/inventario/stock" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/inventario/stock"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Stock General
                 </button>
                 <button
                   onClick={() => navigate("/app/inventario/productos")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/inventario/productos" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/inventario/productos"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Productos
                 </button>
                 <button
                   onClick={() => navigate("/app/inventario/categorias")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/inventario/categorias" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/inventario/categorias"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Categorías
                 </button>
                 <button
                   onClick={() => navigate("/app/inventario/proveedores")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/inventario/proveedores" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/inventario/proveedores"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Proveedores
@@ -208,96 +234,124 @@ export default function Layout() {
           </div>
           {/* Menú Desplegable: Facturación */}
           <div>
-          <button
-            onClick={() => setFacturacionOpen(!facturacionOpen)}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
-              (location.pathname.startsWith("/app/facturacion"))
-                ? "bg-slate-800 text-white"
-                : "text-slate-300 hover:bg-slate-800 hover:text-white"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <Receipt className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && <span className="font-medium">Facturación</span>}
-            </div>
-            {sidebarOpen && (facturacionOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
-          </button>
-          {sidebarOpen && facturacionOpen && (
-            <div className="ml-4 mt-1 space-y-1 border-l-2 border-slate-700 pl-2">
-              <button
-                onClick={() => navigate("/app/facturacion/nueva")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  location.pathname === "/app/facturacion/nueva" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+            <button
+              onClick={() => setFacturacionOpen(!facturacionOpen)}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${location.pathname.startsWith("/app/facturacion")
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
                 }`}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                Nueva Factura
-              </button>
-              <button
-                onClick={() => navigate("/app/facturacion/lista")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  location.pathname === "/app/facturacion/lista" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                }`}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                Lista de Facturas
-              </button>
-            </div>
-          )}
-        </div>
+            >
+              <div className="flex items-center gap-3">
+                <Receipt className="w-5 h-5 flex-shrink-0" />
+                {sidebarOpen && (
+                  <span className="font-medium">Facturación</span>
+                )}
+              </div>
+              {sidebarOpen &&
+                (facturacionOpen ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                ))}
+            </button>
+            {sidebarOpen && facturacionOpen && (
+              <div className="ml-4 mt-1 space-y-1 border-l-2 border-slate-700 pl-2">
+                <button
+                  onClick={() => navigate("/app/facturacion/nueva")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/facturacion/nueva"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Nueva Factura
+                </button>
+                <button
+                  onClick={() => navigate("/app/facturacion/lista")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/facturacion/lista"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Lista de Facturas
+                </button>
+              </div>
+            )}
+          </div>
           {/* Menú Desplegable: Contabilidad */}
           <div>
             <button
               onClick={() => setContabilidadOpen(!contabilidadOpen)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
-                (location.pathname.startsWith("/app/contabilidad"))
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${location.pathname.startsWith("/app/contabilidad")
                   ? "bg-slate-800 text-white"
                   : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 <Receipt className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && <span className="font-medium">Contabilidad</span>}
+                {sidebarOpen && (
+                  <span className="font-medium">Contabilidad</span>
+                )}
               </div>
-              {sidebarOpen && (contabilidadOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
+              {sidebarOpen &&
+                (contabilidadOpen ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                ))}
             </button>
             {sidebarOpen && contabilidadOpen && (
               <div className="ml-4 mt-1 space-y-1 border-l-2 border-slate-700 pl-2">
                 <button
                   onClick={() => navigate("/app/contabilidad/gastos")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/contabilidad/gastos" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/contabilidad/gastos"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Gastos
                 </button>
                 <button
                   onClick={() => navigate("/app/contabilidad/gastos-fijos")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/contabilidad/gastos-fijos" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/contabilidad/gastos-fijos"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Gastos Fijos
                 </button>
                 <button
                   onClick={() => navigate("/app/contabilidad/categorias")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/contabilidad/categorias" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/contabilidad/categorias"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Categorías
                 </button>
                 <button
                   onClick={() => navigate("/app/contabilidad/impuestos")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/contabilidad/impuestos" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/contabilidad/impuestos"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Impuestos
+                </button>
+                <button
+                  onClick={() => navigate("/app/contabilidad/cierre")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/contabilidad/cierre"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Cierre Mensual
                 </button>
               </div>
             )}
@@ -306,39 +360,44 @@ export default function Layout() {
           <div>
             <button
               onClick={() => setReportesOpen(!reportesOpen)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
-                location.pathname.startsWith("/app/reportes")
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${location.pathname.startsWith("/app/reportes")
                   ? "bg-slate-800 text-white"
                   : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 <BarChart3 className="w-5 h-5 flex-shrink-0" />
                 {sidebarOpen && <span className="font-medium">Reportes</span>}
               </div>
-              {sidebarOpen && (reportesOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
+              {sidebarOpen &&
+                (reportesOpen ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                ))}
             </button>
             {sidebarOpen && reportesOpen && (
               <div className="ml-4 mt-1 space-y-1 border-l-2 border-slate-700 pl-2">
                 <button
                   onClick={() => navigate("/app/reportes/estado-resultados")}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === "/app/reportes/estado-resultados" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === "/app/reportes/estado-resultados"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Estado de Resultados
                 </button>
-                
               </div>
             )}
           </div>
           {/* Backup Restore */}
           <button
             onClick={() => navigate("/app/backup")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-              isActive("/app/backup") ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive("/app/backup")
+                ? "bg-blue-600 text-white"
+                : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
           >
             <Database className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span className="font-medium">Base de Datos</span>}
@@ -347,12 +406,15 @@ export default function Layout() {
           {/* Cambiar Contraseña */}
           <button
             onClick={() => navigate("/app/password")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-              isActive("/app/password") ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive("/app/password")
+                ? "bg-blue-600 text-white"
+                : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
           >
             <Key className="w-5 h-5 flex-shrink-0" />
-            {sidebarOpen && <span className="font-medium">Cambiar Contraseña</span>}
+            {sidebarOpen && (
+              <span className="font-medium">Cambiar Contraseña</span>
+            )}
           </button>
         </nav>
 

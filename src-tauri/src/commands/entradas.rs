@@ -36,6 +36,11 @@ pub async fn crear_entrada(
         return Err("No se puede registrar entrada para un producto desactivado".to_string());
     }
 
+    let fecha_a_validar = datos.fecha_entrada.as_deref().unwrap_or("");
+    if !fecha_a_validar.is_empty() {
+        crate::commands::periodos::verificar_periodo_abierto(pool.inner(), fecha_a_validar).await?;
+    }
+
     let ahora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
     let fecha_entrada = match datos.fecha_entrada {
         Some(f) if f.len() == 10 => format!("{} {}", f, &ahora[11..]), // "YYYY-MM-DD" + " HH:MM:SS"
@@ -533,7 +538,7 @@ pub async fn crear_salida_manual(
     .await
     .map_err(|e| e.to_string())?;
 
-    let (codigo, nombre, activo, tipo_producto) = match producto {
+    let (_, nombre, activo, tipo_producto) = match producto {
         Some(p) => p,
         None => return Err("Producto no encontrado".to_string()),
     };
@@ -546,9 +551,14 @@ pub async fn crear_salida_manual(
         return Err("Los productos compuestos no pueden tener movimientos directos. Ajusta sus componentes.".to_string());
     }
 
+    let fecha_a_validar = fecha.as_deref().unwrap_or("");
+    if !fecha_a_validar.is_empty() {
+        crate::commands::periodos::verificar_periodo_abierto(pool.inner(), fecha_a_validar).await?;
+    }
+
     let ahora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
     
-    // ✅ CORRECCIÓN: Si la fecha viene sin hora, agregarle la hora actual
+    // CORRECCIÓN: Si la fecha viene sin hora, agregarle la hora actual
     let fecha_mov = match fecha {
         Some(f) if f.len() == 10 => format!("{} {}", f, &ahora[11..]), // "YYYY-MM-DD" + " HH:MM:SS"
         Some(f) => f,

@@ -33,10 +33,9 @@ pub async fn crear_factura(
         None => ahora.clone(),
     };
 
-    let numero = generar_numero_factura(pool.inner()).await?;
     crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &fecha).await?;
+    let numero = generar_numero_factura(pool.inner()).await?;
 
-    // ✅ CORREGIDO: Sin impuesto_id
     let result = sqlx::query(
         "INSERT INTO facturas (numero, paciente_id, consulta_id, fecha, descuento, metodo_pago, observaciones)
          VALUES (?, ?, ?, ?, ?, ?, ?)"
@@ -126,6 +125,19 @@ pub async fn agregar_item_factura(
     }
     if datos.precio_unitario < 0.0 {
         return Err("El precio no puede ser negativo".to_string());
+    }
+    let factura_fecha: Option<(String,)> = sqlx::query_as(
+        "SELECT fecha FROM facturas WHERE id = ?"
+    )
+    .bind(datos.factura_id)
+    .fetch_optional(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    if let Some((fecha_factura,)) = factura_fecha {
+        crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &fecha_factura).await?;
+    } else {
+        return Err("Factura no encontrada".to_string());
     }
 
     // === LÓGICA DE INVENTARIO PARA PRODUCTOS ===
@@ -265,6 +277,19 @@ pub async fn eliminar_item_factura(
         Some(d) => d,
         None => return Err("Detalle no encontrado".to_string()),
     };
+
+    let factura_fecha: Option<(String,)> = sqlx::query_as(
+        "SELECT fecha FROM facturas WHERE id = ?"
+    )
+    .bind(factura_id)
+    .fetch_optional(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    if let Some((fecha_factura,)) = factura_fecha {
+        crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &fecha_factura).await?;
+    }
+
 
     // Si era un producto, restaurar el stock
     if tipo_item == "PRODUCTO" && producto_id.is_some() {
@@ -577,23 +602,22 @@ pub async fn anular_factura(
     pool: tauri::State<'_, SqlitePool>,
     factura_id: i64,
 ) -> Result<serde_json::Value, String> {
-    let factura: Option<(String,)> = sqlx::query_as(
-        "SELECT estado FROM facturas WHERE id = ?"
+
+
+    let (estado, fecha_factura): (String, String) = sqlx::query_as(
+        "SELECT estado, fecha FROM facturas WHERE id = ?"
     )
     .bind(factura_id)
     .fetch_optional(pool.inner())
     .await
-    .map_err(|e| e.to_string())?;
-
-    let (estado,) = match factura {
-        Some(f) => f,
-        None => return Err("Factura no encontrada".to_string()),
-    };
+    .map_err(|e| e.to_string())?
+    .ok_or("Factura no encontrada".to_string())?;
 
     if estado == "ANULADA" {
         return Err("La factura ya está anulada".to_string());
     }
 
+    crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &fecha_factura).await?;
     // 1. Obtener todos los items de tipo PRODUCTO de esta factura
     let items: Vec<(i64, f64, f64)> = sqlx::query_as(
         "SELECT producto_id, cantidad, costo_unitario FROM detalle_factura 
