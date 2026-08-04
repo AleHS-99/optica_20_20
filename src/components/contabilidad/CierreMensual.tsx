@@ -153,15 +153,15 @@ export default function CierreMensual() {
       }
 
       // CORRECCIÓN: Calcular total_gastos sumando los campos que vienen de Rust
-      const totalGastosCalculado = detalle.gastos_fijos + detalle.gastos_variables + (detalle.gastos_financieros || 0);
+      const totalGastosCalculado = detalle.gastos_fijos + detalle.gastos_variables;
 
       // --- Resumen de Gastos y Cuadro Financiero ---
       const finRows = [
         ['Gastos Fijos', `$${detalle.gastos_fijos.toFixed(2)}`],
         ['Gastos Variables', `$${detalle.gastos_variables.toFixed(2)}`],
-        ['Gastos Financieros', `$${detalle.gastos_financieros.toFixed(2)}`],
         ['Total Gastos', `$${totalGastosCalculado.toFixed(2)}`], // Usamos la variable calculada arriba
         ['Utilidad Operativa', `$${detalle.utilidad_operativa.toFixed(2)}`],
+        ['Gastos Financieros', `$${detalle.gastos_financieros.toFixed(2)}`],
         ['Utilidad Antes de Impuestos', `$${detalle.utilidad_antes_impuestos.toFixed(2)}`],
         [
           `Impuesto (${detalle.impuesto_porcentaje.toFixed(2)}%)${detalle.es_impuesto_estimado ? ' *Estimado' : ''}`,
@@ -187,7 +187,7 @@ export default function CierreMensual() {
             doc.setFont("helvetica", "bold");
           }
           // Resaltar Utilidad Operativa y Antes de Impuestos
-          if (data.row.index === 4 || data.row.index === 5) {
+          if (data.row.index === 3 || data.row.index === 5) {
             doc.setTextColor(15, 23, 42);
             doc.setFont("helvetica", "bold");
           }
@@ -283,7 +283,7 @@ export default function CierreMensual() {
           title: "¡Cierre Exitoso!",
           html: `
             <p>${resp.message}</p>
-            <p class="text-sm text-gray-600 mt-2">Utilidad Neta: <strong>$${resp.utilidad_neta.toFixed(2)}</strong></p>
+            
           `,
           icon: "success",
         });
@@ -422,7 +422,6 @@ export default function CierreMensual() {
                   <th className="px-6 py-3">Usuario</th>
                   <th className="px-6 py-3 text-right">Ventas</th>
                   <th className="px-6 py-3 text-right">Gastos</th>
-                  <th className="px-6 py-3 text-right">Utilidad Neta</th>
                   <th className="px-6 py-3">Observaciones</th>
                   <th className="px-6 py-3">Acciones</th>
                 </tr>
@@ -448,11 +447,6 @@ export default function CierreMensual() {
                       ${c.gastos_totales_cerrados.toFixed(2)}
                     </td>
                     <td
-                      className={`px-6 py-4 text-right font-mono font-bold ${c.utilidad_neta_cerrada >= 0 ? "text-blue-700" : "text-red-700"}`}
-                    >
-                      ${c.utilidad_neta_cerrada.toFixed(2)}
-                    </td>
-                    <td
                       className="px-6 py-4 text-gray-500 max-w-xs truncate"
                       title={c.observaciones}
                     >
@@ -460,7 +454,7 @@ export default function CierreMensual() {
                     </td>
                     <td className="px-6 py-4">
                       <button 
-                          onClick={() => generarYGuardarPDF(c.nombre)}
+                          onClick={() => generarYGuardarPDF(c.periodo)}
                           className="text-blue-600 hover:text-blue-800"
                           title="Descargar Reporte PDF"
                       >

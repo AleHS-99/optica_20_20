@@ -171,7 +171,7 @@ pub async fn obtener_detalle_cierre(
 ) -> Result<DetalleCierre, String> {
     // Validar que el período esté cerrado (opcional, pero recomendado)
     let cerrado: Option<(String,)> = sqlx::query_as(
-        "SELECT periodo, nombre FROM periodos_contables WHERE nombre = ? AND estado = 'CERRADO'"
+        "SELECT periodo, nombre FROM periodos_contables WHERE periodo = ? AND estado = 'CERRADO'"
     )
     .bind(&periodo)
     .fetch_optional(pool.inner())
