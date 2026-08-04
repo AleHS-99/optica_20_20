@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Swal from "sweetalert2";
-import { FileText, TrendingUp, TrendingDown, AlertTriangle, Info, ChevronLeft, ChevronRight, File } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, AlertTriangle, Info, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface DatosPeriodo {
   ventas_totales: number;

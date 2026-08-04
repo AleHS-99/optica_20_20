@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Swal from "sweetalert2";
 import {
   PackagePlus, Plus, Trash2, X, Save, Loader2,
-  Search, RefreshCw, Calendar, Filter, Eye
+  RefreshCw, Filter
 } from "lucide-react";
 
 interface Producto { id: number; codigo: string; nombre: string; }

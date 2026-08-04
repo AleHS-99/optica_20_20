@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Swal from "sweetalert2";
 import {
-  Package, Loader2, Search, RefreshCw, AlertTriangle, TrendingUp
+  Package, Loader2, Search, RefreshCw, AlertTriangle
 } from "lucide-react";
 
 interface StockProducto {
