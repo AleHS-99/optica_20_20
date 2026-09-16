@@ -84,7 +84,7 @@ export default function Layout() {
                 : "text-slate-300 hover:bg-slate-800 hover:text-white"
               }`}
           >
-            <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+            <LayoutDashboard className="w-5 h-5 shrink-0" />
             {sidebarOpen && <span className="font-medium">Dashboard</span>}
           </button>
 
@@ -100,7 +100,7 @@ export default function Layout() {
                 }`}
             >
               <div className="flex items-center gap-3">
-                <Stethoscope className="w-5 h-5 flex-shrink-0" />
+                <Stethoscope className="w-5 h-5 shrink-0" />
                 {sidebarOpen && <span className="font-medium">Clínica</span>}
               </div>
               {sidebarOpen &&
@@ -156,7 +156,7 @@ export default function Layout() {
                 }`}
             >
               <div className="flex items-center gap-3">
-                <Package className="w-5 h-5 flex-shrink-0" />
+                <Package className="w-5 h-5 shrink-0" />
                 {sidebarOpen && <span className="font-medium">Inventario</span>}
               </div>
               {sidebarOpen &&
@@ -242,7 +242,7 @@ export default function Layout() {
                 }`}
             >
               <div className="flex items-center gap-3">
-                <Receipt className="w-5 h-5 flex-shrink-0" />
+                <Receipt className="w-5 h-5 shrink-0" />
                 {sidebarOpen && (
                   <span className="font-medium">Facturación</span>
                 )}
@@ -289,7 +289,7 @@ export default function Layout() {
                 }`}
             >
               <div className="flex items-center gap-3">
-                <Receipt className="w-5 h-5 flex-shrink-0" />
+                <Receipt className="w-5 h-5 shrink-0" />
                 {sidebarOpen && (
                   <span className="font-medium">Contabilidad</span>
                 )}
@@ -366,7 +366,7 @@ export default function Layout() {
                 }`}
             >
               <div className="flex items-center gap-3">
-                <BarChart3 className="w-5 h-5 flex-shrink-0" />
+                <BarChart3 className="w-5 h-5 shrink-0" />
                 {sidebarOpen && <span className="font-medium">Reportes</span>}
               </div>
               {sidebarOpen &&
@@ -388,6 +388,17 @@ export default function Layout() {
                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                   Estado de Resultados
                 </button>
+                <button
+                  onClick={() => navigate("/app/reportes/ventas")}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === "/app/reportes/ventas"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  Reporte de Ventas
+                </button>
               </div>
             )}
           </div>
@@ -399,7 +410,7 @@ export default function Layout() {
                 : "text-slate-300 hover:bg-slate-800 hover:text-white"
               }`}
           >
-            <Database className="w-5 h-5 flex-shrink-0" />
+            <Database className="w-5 h-5 shrink-0" />
             {sidebarOpen && <span className="font-medium">Base de Datos</span>}
           </button>
 
@@ -411,7 +422,7 @@ export default function Layout() {
                 : "text-slate-300 hover:bg-slate-800 hover:text-white"
               }`}
           >
-            <Key className="w-5 h-5 flex-shrink-0" />
+            <Key className="w-5 h-5 shrink-0" />
             {sidebarOpen && (
               <span className="font-medium">Cambiar Contraseña</span>
             )}
@@ -424,7 +435,7 @@ export default function Layout() {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-900/30 hover:text-red-300 transition-colors"
           >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
+            <LogOut className="w-5 h-5 shrink-0" />
             {sidebarOpen && <span className="font-medium">Cerrar Sesión</span>}
           </button>
         </div>

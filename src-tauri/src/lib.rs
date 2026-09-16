@@ -123,6 +123,7 @@ pub fn run() {
             commands::reportes::obtener_stats_financieras,
             commands::reportes::guardar_reporte_pdf,
             commands::reportes::obtener_detalle_cierre,
+            commands::reportes::obtener_reporte_ventas,
             // Períodos Contables
             commands::periodos::listar_periodos,
             commands::periodos::obtener_ultimo_cierre,

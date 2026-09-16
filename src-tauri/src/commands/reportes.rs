@@ -90,10 +90,13 @@ pub async fn guardar_reporte_pdf(
     app: AppHandle,
     pdf_bytes: Vec<u8>,
     periodo: String,
+    nombre_archivo: Option<String>,
 ) -> Result<serde_json::Value, String> {
     
     // Nombre sugerido por defecto (ej: cierre_economico_Julio_2026.pdf)
-    let default_name = format!("cierre_economico_{}.pdf", periodo.replace("/", "-"));
+    let default_name = nombre_archivo.unwrap_or_else(|| {
+        format!("cierre_economico_{}.pdf", periodo.replace("/", "-"))
+    });
 
     // Abrir el diálogo para elegir la ubicación
     let file_path = app
@@ -302,5 +305,187 @@ pub async fn obtener_detalle_cierre(
         items_ventas,
         gastos_detalle,
         observaciones,
+    })
+}
+
+// ============================================================
+// REPORTE DE VENTAS
+// ============================================================
+
+#[derive(Serialize)]
+pub struct DesgloseCosto {
+    pub costo_unitario: f64,
+    pub precio_unitario: f64,
+    pub cantidad: f64,
+    pub subtotal: f64,
+    pub costo_total: f64,
+    pub ganancia: f64,
+}
+
+#[derive(Serialize)]
+pub struct ProductoReporte {
+    pub producto_id: i64,
+    pub producto_codigo: String,
+    pub producto_nombre: String,
+    pub cantidad_total: f64,
+    pub costo_promedio: f64,
+    pub precio_promedio: f64,
+    pub subtotal_total: f64,
+    pub costo_total: f64,
+    pub ganancia_total: f64,
+    pub desglose: Vec<DesgloseCosto>,
+}
+
+#[derive(Serialize)]
+pub struct ResumenVentas {
+    pub fecha_desde: String,
+    pub fecha_hasta: String,
+    pub ventas_totales: f64,
+    pub costo_ventas: f64,
+    pub ganancias: f64,
+    pub cantidad_facturas: i64,
+    pub cantidad_items: f64,
+}
+
+#[derive(Serialize)]
+pub struct ReporteVentas {
+    pub resumen: ResumenVentas,
+    pub productos: Vec<ProductoReporte>,
+}
+
+/// Genera el reporte de ventas para un rango de fechas (inclusive).
+/// Por defecto, si el front manda el mismo día en ambos campos, es reporte diario.
+#[tauri::command]
+pub async fn obtener_reporte_ventas(
+    pool: tauri::State<'_, SqlitePool>,
+    fecha_desde: String,
+    fecha_hasta: String,
+) -> Result<ReporteVentas, String> {
+    // 1. Resumen: ventas netas (con descuento) y número de facturas
+    let cabecera: (f64, i64) = sqlx::query_as(
+        "SELECT COALESCE(SUM(f.total), 0.0), COUNT(DISTINCT f.id)
+         FROM facturas f
+         WHERE f.estado != 'ANULADA'
+           AND date(f.fecha) BETWEEN date(?) AND date(?)",
+    )
+    .bind(&fecha_desde)
+    .bind(&fecha_hasta)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    // 2. Costo de ventas (solo productos)
+    let costo_ventas: (f64,) = sqlx::query_as(
+        "SELECT COALESCE(SUM(df.cantidad * df.costo_unitario), 0.0)
+         FROM detalle_factura df
+         JOIN facturas f ON df.factura_id = f.id
+         WHERE f.estado != 'ANULADA'
+           AND date(f.fecha) BETWEEN date(?) AND date(?)
+           AND df.tipo_item = 'PRODUCTO'",
+    )
+    .bind(&fecha_desde)
+    .bind(&fecha_hasta)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    // 3. Cantidad de items vendidos
+    let cantidad_items: (f64,) = sqlx::query_as(
+        "SELECT COALESCE(SUM(df.cantidad), 0.0)
+         FROM detalle_factura df
+         JOIN facturas f ON df.factura_id = f.id
+         WHERE f.estado != 'ANULADA'
+           AND date(f.fecha) BETWEEN date(?) AND date(?)",
+    )
+    .bind(&fecha_desde)
+    .bind(&fecha_hasta)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    // 4. Detalle agrupado por producto + costo unitario + precio unitario
+    let filas: Vec<(i64, String, String, f64, f64, f64, f64)> = sqlx::query_as(
+        "SELECT df.producto_id,
+                p.codigo,
+                p.nombre,
+                df.costo_unitario,
+                df.precio_unitario,
+                SUM(df.cantidad)  AS cantidad,
+                SUM(df.subtotal)  AS subtotal
+         FROM detalle_factura df
+         JOIN facturas f ON df.factura_id = f.id
+         JOIN productos p ON df.producto_id = p.id
+         WHERE f.estado != 'ANULADA'
+           AND date(f.fecha) BETWEEN date(?) AND date(?)
+           AND df.producto_id IS NOT NULL
+         GROUP BY df.producto_id, df.costo_unitario, df.precio_unitario
+         ORDER BY p.nombre ASC, df.costo_unitario ASC",
+    )
+    .bind(&fecha_desde)
+    .bind(&fecha_hasta)
+    .fetch_all(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    // 5. Agrupar en Rust por producto
+    use std::collections::BTreeMap;
+    let mut productos_map: BTreeMap<i64, ProductoReporte> = BTreeMap::new();
+
+    for (pid, codigo, nombre, costo_u, precio_u, cantidad, subtotal) in filas {
+        let entry = productos_map.entry(pid).or_insert_with(|| ProductoReporte {
+            producto_id: pid,
+            producto_codigo: codigo.clone(),
+            producto_nombre: nombre.clone(),
+            cantidad_total: 0.0,
+            costo_promedio: 0.0,
+            precio_promedio: 0.0,
+            subtotal_total: 0.0,
+            costo_total: 0.0,
+            ganancia_total: 0.0,
+            desglose: Vec::new(),
+        });
+
+        let costo_total_item = cantidad * costo_u;
+        let ganancia_item = subtotal - costo_total_item;
+
+        entry.cantidad_total += cantidad;
+        entry.subtotal_total += subtotal;
+        entry.costo_total += costo_total_item;
+        entry.ganancia_total += ganancia_item;
+        entry.desglose.push(DesgloseCosto {
+            costo_unitario: costo_u,
+            precio_unitario: precio_u,
+            cantidad,
+            subtotal,
+            costo_total: costo_total_item,
+            ganancia: ganancia_item,
+        });
+    }
+
+    // 6. Calcular promedios ponderados por cantidad
+    for p in productos_map.values_mut() {
+        p.costo_promedio = if p.cantidad_total > 0.0 {
+            p.costo_total / p.cantidad_total
+        } else {
+            0.0
+        };
+        p.precio_promedio = if p.cantidad_total > 0.0 {
+            p.subtotal_total / p.cantidad_total
+        } else {
+            0.0
+        };
+    }
+
+    Ok(ReporteVentas {
+        resumen: ResumenVentas {
+            fecha_desde,
+            fecha_hasta,
+            ventas_totales: cabecera.0,
+            costo_ventas: costo_ventas.0,
+            ganancias: cabecera.0 - costo_ventas.0,
+            cantidad_facturas: cabecera.1,
+            cantidad_items: cantidad_items.0,
+        },
+        productos: productos_map.into_values().collect(),
     })
 }
