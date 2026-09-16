@@ -4,11 +4,16 @@ mod db;
 mod models;
 
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
+use sqlx::SqlitePool;
 
 /// Estado global de la aplicación (accesible desde todos los commands)
 pub struct AppState {
     pub authenticated: Mutex<bool>,
+}
+#[tauri::command]
+async fn is_backend_ready(app: tauri::AppHandle) -> Result<bool, String> {
+    Ok(app.try_state::<SqlitePool>().is_some())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -23,10 +28,10 @@ pub fn run() {
                     Ok(pool) => {
                         // Guardar el pool en el managed state
                         app_handle.manage(pool);
-                        println!("✅ Base de datos inicializada");
+                        let _ = app_handle.emit("backend-ready", ());
                     }
                     Err(e) => {
-                        eprintln!("❌ Error inicializando DB: {}", e);
+                        let _ = app_handle.emit("backend-error", e);
                     }
                 }
             });
@@ -58,6 +63,7 @@ pub fn run() {
             // Backup/Restore
             commands::backup::crear_backup,
             commands::backup::restaurar_backup,
+            commands::backup::reiniciar_aplicacion,
             // Inventario - Categorías
             commands::inventario::listar_categorias,
             commands::inventario::crear_categoria,
@@ -122,6 +128,7 @@ pub fn run() {
             commands::periodos::obtener_ultimo_cierre,
             commands::periodos::cerrar_periodo, 
             commands::periodos::listar_cierres,
+            is_backend_ready,
         ])
         .run(tauri::generate_context!())
         .expect("error mientras se ejecuta tauri");

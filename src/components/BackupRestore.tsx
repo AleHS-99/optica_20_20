@@ -16,7 +16,6 @@ export default function BackupRestore() {
       if (response.cancelled) {
         return;
       }
-
       if (response.success) {
         Swal.fire({
           title: "¡Backup creado!",
@@ -53,20 +52,6 @@ export default function BackupRestore() {
 
     if (!confirm1.isConfirmed) return;
 
-    // Segunda confirmación por seguridad
-    const confirm2 = await Swal.fire({
-      title: "¿Estás completamente seguro?",
-      text: "Los datos actuales se perderán y se reemplazarán por los del backup.",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, restaurar",
-      cancelButtonText: "Cancelar"
-    });
-
-    if (!confirm2.isConfirmed) return;
-
     setLoadingRestore(true);
     try {
       const response: any = await invoke("restaurar_backup");
@@ -74,7 +59,7 @@ export default function BackupRestore() {
       if (response.cancelled) {
         return;
       }
-
+      
       if (response.success) {
         await Swal.fire({
           title: "¡Restauración exitosa!",
@@ -82,15 +67,16 @@ export default function BackupRestore() {
             <p class="text-sm">La base de datos se restauró correctamente.</p>
             <p class="text-xs text-gray-500 mt-2">Se creó un backup de seguridad en:</p>
             <p class="text-xs break-all text-blue-600">${response.auto_backup}</p>
-            <p class="text-sm mt-3"><strong>La aplicación se reiniciará para aplicar los cambios.</strong></p>
+            <p class="text-sm mt-3"><strong>La aplicación se reiniciará ahora.</strong></p>
           `,
           icon: "success",
           confirmButtonText: "Reiniciar ahora",
-          allowOutsideClick: false
+          allowOutsideClick: false,
+          allowEscapeKey: false,
         });
 
-        // Recargar la aplicación
-        window.location.reload();
+        // NUEVO: reinicia el proceso real de Tauri (no solo el WebView)
+        await invoke("reiniciar_aplicacion");
       }
     } catch (error: any) {
       Swal.fire("Error", error.toString(), "error");

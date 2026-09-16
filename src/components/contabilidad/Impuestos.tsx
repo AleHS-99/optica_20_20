@@ -46,7 +46,7 @@ export default function Impuestos() {
 
   const guardar = async () => {
     if (!form.nombre.trim()) return Swal.fire("Error", "El nombre es obligatorio", "error");
-    if (form.porcentaje < 0) return Swal.fire("Error", "El porcentaje no puede ser negativo", "error");
+    if (form.porcentaje < 0) return Swal.fire("Error", "El Monto no puede ser negativo", "error");
 
     setSaving(true);
     try {
@@ -98,8 +98,8 @@ export default function Impuestos() {
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
-          <strong>Nota:</strong> Los impuestos definidos aquí estarán disponibles al crear facturas.
-          Puedes definir múltiples impuestos y aplicarlos según el tipo de venta.
+          <strong>Nota:</strong> Los impuestos definidos aquí serán contabilizados al ejecutarse el cierre
+          mensual.
         </p>
       </div>
 
@@ -113,7 +113,7 @@ export default function Impuestos() {
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3 text-right">Porcentaje</th>
+                <th className="px-4 py-3 text-right">Monto</th>
                 <th className="px-4 py-3 text-center">Estado</th>
                 <th className="px-4 py-3 text-center">Opciones</th>
               </tr>
@@ -122,7 +122,7 @@ export default function Impuestos() {
               {impuestos.map(i => (
                 <tr key={i.id} className={`bg-white border-b hover:bg-gray-50 ${i.activo === 0 ? "opacity-50" : ""}`}>
                   <td className="px-4 py-3 font-medium">{i.nombre}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-blue-700">{i.porcentaje.toFixed(2)}%</td>
+                  <td className="px-4 py-3 text-right font-semibold text-blue-700">{i.porcentaje.toFixed(2)}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       i.activo === 1 ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
@@ -161,7 +161,7 @@ export default function Impuestos() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: IVA, Impuesto ventas" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Porcentaje *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Monto *</label>
                 <input type="number" min={0} step={0.01} value={form.porcentaje}
                   onChange={e => setForm({ ...form, porcentaje: Number(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg" />

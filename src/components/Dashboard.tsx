@@ -328,6 +328,7 @@ function ActionCard({
 function StockBajoCard() {
   const [productosBajoStock, setProductosBajoStock] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     cargarAlertas();
@@ -391,7 +392,7 @@ function StockBajoCard() {
         ))}
       </div>
       <button 
-        onClick={() => {}} // Opcional: Navegar a una vista filtrada de stock bajo
+        onClick={() => navigate("/inventario/stock")}
         className="w-full text-center text-xs text-red-600 hover:text-red-800 font-semibold mt-3 pt-2 border-t border-red-200"
       >
         Revisar inventario completo

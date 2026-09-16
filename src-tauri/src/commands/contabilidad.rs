@@ -668,10 +668,9 @@ pub struct DatosPeriodo {
     pub utilidad_operativa: f64,
     pub gastos_financieros: f64,
     pub utilidad_antes_impuestos: f64,
-    pub impuesto_porcentaje: f64,
+    pub total_impuestos: f64,
     pub monto_impuesto: f64,
     pub utilidad_neta: f64,
-    pub es_impuesto_estimado: bool,
 }
 
 /// Función auxiliar para calcular los datos de un periodo específico (formato "YYYY-MM")
@@ -725,21 +724,17 @@ pub(crate) async fn calcular_datos_periodo(pool: &SqlitePool, periodo: &str) -> 
 
     let utilidad_antes_impuestos = utilidad_operativa - gastos_fin.0;
 
-    // 4. Impuestos (Configurado o Estimado 20%)
-    let imp_configurado: Option<(f64,)> = sqlx::query_as(
-        "SELECT porcentaje FROM impuestos WHERE activo = 1 LIMIT 1"
+    // 4. Impuestos suma de TODOS los impuestos activos como monto fijo
+    let total_impuestos: (f64,) = sqlx::query_as(
+        "SELECT COALESCE(SUM(porcentaje), 0.0) FROM impuestos WHERE activo = 1"
     )
-    .fetch_optional(pool)
+    .fetch_one(pool)
     .await
     .map_err(|e| e.to_string())?;
 
-    let (impuesto_porcentaje, es_estimado) = match imp_configurado {
-        Some((p,)) if p > 0.0 => (p, false),
-        _ => (20.0, true), // Estimado del 20% si no hay configuración
-    };
-
+    // Solo se aplican si hay utilidad antes de impuestos positiva
     let monto_impuesto = if utilidad_antes_impuestos > 0.0 {
-        utilidad_antes_impuestos * (impuesto_porcentaje / 100.0)
+        total_impuestos.0
     } else {
         0.0
     };
@@ -755,10 +750,9 @@ pub(crate) async fn calcular_datos_periodo(pool: &SqlitePool, periodo: &str) -> 
         utilidad_operativa,
         gastos_financieros: gastos_fin.0,
         utilidad_antes_impuestos,
-        impuesto_porcentaje,
+        total_impuestos: total_impuestos.0,
         monto_impuesto,
         utilidad_neta,
-        es_impuesto_estimado: es_estimado,
     })
 }
 
@@ -788,7 +782,7 @@ pub async fn calcular_estado_resultados(
             - actual.gastos_operativos_variables;
         actual.utilidad_antes_impuestos = actual.utilidad_operativa - actual.gastos_financieros;
         actual.monto_impuesto = if actual.utilidad_antes_impuestos > 0.0 {
-            actual.utilidad_antes_impuestos * (actual.impuesto_porcentaje / 100.0)
+            actual.total_impuestos
         } else {
             0.0
         };

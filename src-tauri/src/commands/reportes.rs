@@ -155,13 +155,12 @@ pub struct DetalleCierre {
     pub gastos_financieros: f64,
     pub utilidad_operativa: f64,
     pub utilidad_antes_impuestos: f64,
-    pub impuesto_porcentaje: f64,
+    pub total_impuestos: f64,
     pub monto_impuesto: f64,
     pub utilidad_neta: f64,
     pub items_ventas: Vec<ItemVenta>,
     pub gastos_detalle: Vec<GastoDetalle>,
     pub observaciones: String,
-    pub es_impuesto_estimado: bool,
 }
 
 #[tauri::command]
@@ -258,20 +257,17 @@ pub async fn obtener_detalle_cierre(
     let utilidad_antes_impuestos = utilidad_operativa - gastos_financieros;
 
     // 4. Impuestos
-    let imp_configurado: Option<(f64,)> = sqlx::query_as(
-        "SELECT porcentaje FROM impuestos WHERE activo = 1 LIMIT 1"
+    let impuestos_total: (f64,) = sqlx::query_as(
+        "SELECT COALESCE(SUM(porcentaje), 0.0) FROM impuestos WHERE activo = 1"
     )
-    .fetch_optional(pool.inner())
+    .fetch_one(pool.inner())
     .await
     .map_err(|e| e.to_string())?;
 
-    let (impuesto_porcentaje, es_impuesto_estimado) = match imp_configurado {
-        Some((p,)) if p > 0.0 => (p, false),
-        _ => (20.0, true),
-    };
+    let total_impuestos = impuestos_total.0;
 
     let monto_impuesto = if utilidad_antes_impuestos > 0.0 {
-        utilidad_antes_impuestos * (impuesto_porcentaje / 100.0)
+        total_impuestos
     } else {
         0.0
     };
@@ -300,12 +296,11 @@ pub async fn obtener_detalle_cierre(
         gastos_financieros,
         utilidad_operativa,
         utilidad_antes_impuestos,
-        impuesto_porcentaje,
+        total_impuestos,
         monto_impuesto,
         utilidad_neta,
         items_ventas,
         gastos_detalle,
         observaciones,
-        es_impuesto_estimado,
     })
 }

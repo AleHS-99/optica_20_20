@@ -144,7 +144,7 @@ export default function EstadoResultados() {
       {/* ✅ NUEVO: Panel inteligente de gastos fijos */}
       {!periodoCerrado ? (
         // CASO 1: Mes actual (abierto) → Mostrar checkbox funcional
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -175,8 +175,8 @@ export default function EstadoResultados() {
         </div>
       ) : (
         // CASO 2: Mes anterior (cerrado) → Mostrar mensaje informativo
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 flex gap-3">
-          <Info className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+        <div className="bg-linear-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 flex gap-3">
+          <Info className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
           <div className="text-sm text-green-800">
             <p className="font-semibold">Periodo Cerrado</p>
             <p className="mt-1">
@@ -192,7 +192,7 @@ export default function EstadoResultados() {
 
       {actual.es_impuesto_estimado && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
             <p className="font-semibold">Impuesto Estimado Aplicado</p>
             <p>No hay impuestos configurados. Se utiliza una tasa estimada del {actual.impuesto_porcentaje}%.</p>
