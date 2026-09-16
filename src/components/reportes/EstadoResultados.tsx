@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Swal from "sweetalert2";
-import { FileText, TrendingUp, TrendingDown, AlertTriangle, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, Info, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface DatosPeriodo {
   ventas_totales: number;
@@ -12,10 +12,9 @@ interface DatosPeriodo {
   utilidad_operativa: number;
   gastos_financieros: number;
   utilidad_antes_impuestos: number;
-  impuesto_porcentaje: number;
+  total_impuestos: number;
   monto_impuesto: number;
   utilidad_neta: number;
-  es_impuesto_estimado: boolean;
 }
 
 interface ReporteData {
@@ -190,16 +189,6 @@ export default function EstadoResultados() {
         </div>
       )}
 
-      {actual.es_impuesto_estimado && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-800">
-            <p className="font-semibold">Impuesto Estimado Aplicado</p>
-            <p>No hay impuestos configurados. Se utiliza una tasa estimada del {actual.impuesto_porcentaje}%.</p>
-          </div>
-        </div>
-      )}
-
       {/* ✅ CORREGIDO: Tabla con estructura completa para alineación perfecta */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <table className="w-full">
@@ -247,7 +236,12 @@ export default function EstadoResultados() {
             <Fila label="Gastos Financieros" actual={actual.gastos_financieros} anterior={anterior.gastos_financieros} esSubtotal />
             
             <Fila label="UTILIDAD ANTES DE IMPUESTOS (EBT)" actual={actual.utilidad_antes_impuestos} anterior={anterior.utilidad_antes_impuestos} esNegrita />
-            <Fila label={`Impuestos (${actual.impuesto_porcentaje}%)${actual.es_impuesto_estimado ? ' *Estimado' : ''}`} actual={actual.monto_impuesto} anterior={anterior.monto_impuesto} esSubtotal />
+            <Fila
+              label="Impuestos"
+              actual={actual.monto_impuesto}
+              anterior={anterior.monto_impuesto}
+              esSubtotal
+            />
             
             <tr className="bg-blue-50 border-t-2 border-blue-200">
               <td className="px-4 py-4 text-left font-bold text-blue-900 text-lg">UTILIDAD NETA</td>

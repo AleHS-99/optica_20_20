@@ -163,10 +163,7 @@ export default function CierreMensual() {
         ['Utilidad Operativa', `$${detalle.utilidad_operativa.toFixed(2)}`],
         ['Gastos Financieros', `$${detalle.gastos_financieros.toFixed(2)}`],
         ['Utilidad Antes de Impuestos', `$${detalle.utilidad_antes_impuestos.toFixed(2)}`],
-        [
-          `Impuesto (${detalle.impuesto_porcentaje.toFixed(2)}%)${detalle.es_impuesto_estimado ? ' *Estimado' : ''}`,
-          `$${detalle.monto_impuesto.toFixed(2)}`
-        ],
+        ['Impuestos', `$${detalle.monto_impuesto.toFixed(2)}`],
         ['Utilidad Neta', `$${detalle.utilidad_neta.toFixed(2)}`],
       ];
 
