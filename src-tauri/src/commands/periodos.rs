@@ -198,3 +198,97 @@ pub async fn listar_cierres(
 
     Ok(cierres)
 }
+
+/// Revierte el cierre de un período específico.
+///
+/// Reglas:
+/// - El período debe estar CERRADO.
+/// - No debe existir un cierre POSTERIOR (formato "YYYY-MM" permite comparación lexicográfica).
+/// - Elimina los gastos autogenerados de ese mes (es_autogenerado = 1).
+/// - Elimina el registro de periodos_contables.
+///
+/// Todo se ejecuta en una transacción: si algo falla, no se modifica nada.
+#[tauri::command]
+pub async fn revertir_cierre(
+    pool: tauri::State<'_, SqlitePool>,
+    periodo: String, // Formato "YYYY-MM"
+) -> Result<serde_json::Value, String> {
+    // 1. Verificar que el período esté cerrado
+    let cierre: Option<(String, String)> = sqlx::query_as(
+        "SELECT periodo, nombre FROM periodos_contables
+         WHERE periodo = ? AND estado = 'CERRADO'",
+    )
+    .bind(&periodo)
+    .fetch_optional(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let (periodo_db, nombre_periodo) = match cierre {
+        Some(c) => c,
+        None => {
+            return Err(format!(
+                "El período '{}' no está cerrado o no existe.",
+                periodo
+            ))
+        }
+    };
+
+    // 2. Verificar que NO exista un cierre posterior
+    let cierre_posterior: Option<(String, String)> = sqlx::query_as(
+        "SELECT periodo, nombre FROM periodos_contables
+         WHERE estado = 'CERRADO' AND periodo > ?
+         ORDER BY periodo ASC LIMIT 1",
+    )
+    .bind(&periodo_db)
+    .fetch_optional(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    if let Some((p_post, n_post)) = cierre_posterior {
+        return Err(format!(
+            "No se puede revertir el cierre de '{}' porque ya existe un cierre posterior ('{}' - {}). \
+             Debes revertir primero el cierre más reciente.",
+            nombre_periodo, p_post, n_post
+        ));
+    }
+
+    // 3. Transacción: borrar gastos autogenerados + registro del período
+    let mut tx = pool
+        .inner()
+        .begin()
+        .await
+        .map_err(|e| format!("Error iniciando transacción: {}", e))?;
+
+    // 3a. Eliminar gastos autogenerados de ese mes
+    let gastos_eliminados = sqlx::query(
+        "DELETE FROM gastos
+         WHERE es_autogenerado = 1
+           AND strftime('%Y-%m', fecha) = ?",
+    )
+    .bind(&periodo_db)
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| format!("Error eliminando gastos autogenerados: {}", e))?
+    .rows_affected();
+
+    // 3b. Eliminar el registro del período
+    sqlx::query("DELETE FROM periodos_contables WHERE periodo = ?")
+        .bind(&periodo_db)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| format!("Error eliminando período: {}", e))?;
+
+    tx.commit()
+        .await
+        .map_err(|e| format!("Error confirmando transacción: {}", e))?;
+
+    Ok(serde_json::json!({
+        "success": true,
+        "message": format!(
+            "Cierre de '{}' revertido correctamente. Se eliminaron {} gasto(s) autogenerado(s).",
+            nombre_periodo, gastos_eliminados
+        ),
+        "gastos_eliminados": gastos_eliminados,
+        "periodo": periodo_db
+    }))
+}

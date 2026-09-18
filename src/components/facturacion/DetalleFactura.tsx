@@ -438,13 +438,13 @@ export default function DetalleFactura() {
                 />
                 <div className="flex gap-2 mt-2">
                   <button
-                    onClick={() => setFormPago({ ...formPago, monto: factura.saldo_pendiente })}
+                    onClick={() => setFormPago({ ...formPago, monto: Math.round(factura.saldo_pendiente *100)/100 })}
                     className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
                   >
                     Cobrar todo
                   </button>
                   <button
-                    onClick={() => setFormPago({ ...formPago, monto: factura.saldo_pendiente / 2 })}
+                    onClick={() => setFormPago({ ...formPago, monto: Math.round((factura.saldo_pendiente / 2)*100)/100 })}
                     className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
                   >
                     50%

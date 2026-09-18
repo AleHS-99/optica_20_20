@@ -129,6 +129,7 @@ pub fn run() {
             commands::periodos::obtener_ultimo_cierre,
             commands::periodos::cerrar_periodo, 
             commands::periodos::listar_cierres,
+            commands::periodos::revertir_cierre,
             is_backend_ready,
         ])
         .run(tauri::generate_context!())

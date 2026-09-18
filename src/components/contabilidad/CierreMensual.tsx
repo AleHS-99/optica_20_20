@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  RotateCcw
 } from "lucide-react";
 
 interface Cierre {
@@ -34,6 +35,51 @@ export default function CierreMensual() {
   const [cierres, setCierres] = useState<Cierre[]>([]);
   const [loading, setLoading] = useState(false);
   const [cargandoCierres, setCargandoCierres] = useState(true);
+  /// Un cierre es revertible si no existe otro cierre con período posterior.
+  /// (el formato "YYYY-MM" permite comparación lexicográfica directa)
+  const esRevertible = (periodo: string) =>
+    !cierres.some((c) => c.periodo > periodo);
+
+  const revertirCierre = async (periodo: string, nombre: string) => {
+    const r = await Swal.fire({
+      title: "¿Revertir cierre contable?",
+      html: `
+        <p>Vas a revertir el cierre del período <strong>${nombre}</strong>.</p>
+        <ul class="text-left text-sm text-gray-600 mt-3 space-y-1">
+          <li>• Se eliminarán los <strong>gastos fijos autogenerados</strong> de ese mes.</li>
+          <li>• El período quedará <strong>abierto</strong> y podrás modificar facturas y gastos.</li>
+          <li>• Esta acción <strong>no</strong> elimina facturas ni gastos manuales.</li>
+        </ul>
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, revertir",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!r.isConfirmed) return;
+
+    try {
+      Swal.fire({
+        title: "Revirtiendo cierre...",
+        didOpen: () => Swal.showLoading(),
+      });
+
+      const resp: any = await invoke("revertir_cierre", { periodo });
+
+      Swal.close();
+
+      if (resp.success) {
+        await Swal.fire("Revertido", resp.message, "success");
+        cargarBitacora();
+      }
+    } catch (e: any) {
+      Swal.close();
+      Swal.fire("Error al revertir", e.toString(), "error");
+    }
+  };
 
   useEffect(() => {
     cargarBitacora();
@@ -457,6 +503,15 @@ export default function CierreMensual() {
                       >
                           <Download className="w-5 h-5" />
                       </button>
+                      {esRevertible(c.periodo) && (
+                        <button
+                          onClick={() => revertirCierre(c.periodo, c.nombre)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Revertir este cierre"
+                        >
+                          <RotateCcw className="w-5 h-5" />
+                        </button>
+                      )}
                   </td>
                   </tr>
                 ))}
