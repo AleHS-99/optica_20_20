@@ -837,12 +837,12 @@ pub async fn actualizar_entrada(
             // Costo ponderado: suma(ABS(cantidad)*costo) / suma(ABS(cantidad))
             let totales: (f64, f64) = sqlx::query_as(
                 "SELECT COALESCE(SUM(ABS(m.cantidad) * m.costo_unitario), 0.0),
-                        COALESCE(SUM(ABS(m.cantidad)), 0.0)
-                 FROM movimientos_inventario m
-                 WHERE m.referencia_tipo = 'FACTURA'
-                   AND m.referencia_id = ?
-                   AND m.tipo = 'VENTA'
-                   AND m.producto_id = ?"
+                        COALESCE(CAST(SUM(ABS(m.cantidad)) AS REAL), 0.0)
+                FROM movimientos_inventario m
+                WHERE m.referencia_tipo = 'FACTURA'
+                AND m.referencia_id = ?
+                AND m.tipo = 'VENTA'
+                AND m.producto_id = ?"
             )
             .bind(factura_id)
             .bind(lote.producto_id)
