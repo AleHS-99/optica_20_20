@@ -132,6 +132,7 @@ pub struct LoteConDetalles {
     pub proveedor_nombre: Option<String>,
     pub numero_factura_compra: String,
     pub observaciones: String,
+    pub proveedor_id: Option<i64>,
 }
 
 // ============ MOVIMIENTOS ============
@@ -163,4 +164,13 @@ pub struct MovimientoConDetalles {
     pub costo_total: f64,
     pub motivo: String,
     pub fecha: String,
+}
+#[derive(Debug, Deserialize)]
+pub struct ActualizarEntrada {
+    pub costo_unitario: f64,
+    pub cantidad: Option<i64>,          // Solo editable hasta el mínimo ya vendido
+    pub fecha_entrada: Option<String>,
+    pub proveedor_id: Option<i64>,
+    pub numero_factura_compra: Option<String>,
+    pub observaciones: Option<String>,
 }

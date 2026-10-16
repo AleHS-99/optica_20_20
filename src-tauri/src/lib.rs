@@ -80,6 +80,7 @@ pub fn run() {
             commands::inventario::actualizar_producto,
             commands::inventario::eliminar_producto,
             commands::inventario::obtener_producto,
+            commands::entradas::actualizar_entrada,
             // Entradas de Inventario (PEPS)
             commands::entradas::crear_entrada,
             commands::entradas::listar_entradas,

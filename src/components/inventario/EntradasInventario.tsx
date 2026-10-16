@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Swal from "sweetalert2";
 import {
   PackagePlus, Plus, Trash2, X, Save, Loader2,
-  RefreshCw, Filter
+  RefreshCw, Filter, Edit
 } from "lucide-react";
 
 interface Producto { id: number; codigo: string; nombre: string; }
@@ -22,6 +22,7 @@ interface Entrada {
   proveedor_nombre: string | null;
   numero_factura_compra: string;
   observaciones: string;
+  proveedor_id: number | null; 
 }
 
 export default function EntradasInventario() {
@@ -29,6 +30,8 @@ export default function EntradasInventario() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editingLoteId, setEditingLoteId] = useState<number | null>(null);
+  const [cantidadConsumida, setCantidadConsumida] = useState(0);
 
   // Filtros
   const [filtroProducto, setFiltroProducto] = useState<number | null>(null);
@@ -101,10 +104,28 @@ export default function EntradasInventario() {
   };
 
   const abrirNuevaEntrada = () => {
+    setEditingLoteId(null);
+    setCantidadConsumida(0);
     setForm({
       producto_id: null, cantidad: 0, costo_unitario: 0,
       fecha_entrada: new Date().toISOString().split("T")[0],
       proveedor_id: null, numero_factura_compra: "", observaciones: ""
+    });
+    setStockActual(null);
+    setShowModal(true);
+  };
+
+  const abrirEditar = (e: Entrada) => {
+    setEditingLoteId(e.id);
+    setCantidadConsumida(e.cantidad_inicial - e.cantidad_restante);
+    setForm({
+      producto_id: e.producto_id,
+      cantidad: e.cantidad_inicial,
+      costo_unitario: e.costo_unitario,
+      fecha_entrada: e.fecha_entrada.substring(0, 10),
+      proveedor_id: e.proveedor_id,
+      numero_factura_compra: e.numero_factura_compra || "",
+      observaciones: e.observaciones || ""
     });
     setStockActual(null);
     setShowModal(true);
@@ -126,13 +147,38 @@ export default function EntradasInventario() {
     if (form.cantidad <= 0) return Swal.fire("Error", "La cantidad debe ser mayor a 0", "error");
     if (form.costo_unitario < 0) return Swal.fire("Error", "El costo no puede ser negativo", "error");
 
+    if (editingLoteId !== null && form.cantidad < cantidadConsumida) {
+      return Swal.fire("Error",
+        `No puedes reducir la cantidad por debajo de ${cantidadConsumida} (ya vendidas)`,
+        "error");
+    }
+
     setSaving(true);
     try {
-      const r: any = await invoke("crear_entrada", { datos: form });
-      if (r.success) {
-        Swal.fire("¡Éxito!", r.message, "success");
-        setShowModal(false);
-        cargar();
+      if (editingLoteId === null) {
+        const r: any = await invoke("crear_entrada", { datos: form });
+        if (r.success) {
+          Swal.fire("¡Éxito!", r.message, "success");
+          setShowModal(false);
+          cargar();
+        }
+      } else {
+        const r: any = await invoke("actualizar_entrada", {
+          loteId: editingLoteId,
+          datos: {
+            costo_unitario: form.costo_unitario,
+            cantidad: form.cantidad,
+            fecha_entrada: form.fecha_entrada,
+            proveedor_id: form.proveedor_id,
+            numero_factura_compra: form.numero_factura_compra,
+            observaciones: form.observaciones
+          }
+        });
+        if (r.success) {
+          Swal.fire("¡Actualizado!", r.message, "success");
+          setShowModal(false);
+          cargar();
+        }
       }
     } catch (e: any) {
       Swal.fire("Error", e.toString(), "error");
@@ -267,6 +313,13 @@ export default function EntradasInventario() {
                       <td className="px-4 py-3 text-xs">{e.numero_factura_compra || "-"}</td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => abrirEditar(e)}
+                          className="p-1.5 text-amber-600 hover:bg-amber-100 rounded"
+                          title="Editar entrada"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
                           {puedeEliminar && (
                             <button onClick={() => eliminar(e.id, e.producto_nombre, e.cantidad_inicial)}
                               className="p-1.5 text-red-600 hover:bg-red-100 rounded" title="Eliminar">
@@ -316,7 +369,8 @@ export default function EntradasInventario() {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <PackagePlus className="w-5 h-5 text-blue-600" /> Nueva Entrada de Inventario
+                <PackagePlus className="w-5 h-5 text-blue-600" />
+                {editingLoteId ? "Editar Entrada de Inventario" : "Nueva Entrada de Inventario"}
               </h2>
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded">
                 <X className="w-5 h-5" />
@@ -331,7 +385,18 @@ export default function EntradasInventario() {
                     {productoSeleccionado.nombre}
                   </p>
                   <p className="text-blue-700">
-                    Stock actual: <strong>{stockActual} unidades</strong>
+                    Stock actual (incluye este lote): <strong>{stockActual} unidades</strong>
+                  </p>
+                </div>
+              )}
+              {editingLoteId && cantidadConsumida > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+                  <p className="font-semibold text-amber-900">
+                    ⚠️ Este lote ya tiene {cantidadConsumida} unidad(es) vendida(s).
+                  </p>
+                  <p className="text-amber-700 text-xs mt-1">
+                    No puedes reducir la cantidad por debajo de {cantidadConsumida}.
+                    Al cambiar el costo, se recalcularán las facturas afectadas.
                   </p>
                 </div>
               )}
@@ -341,6 +406,7 @@ export default function EntradasInventario() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Producto *</label>
                   <select value={form.producto_id || ""}
                     onChange={e => setForm({ ...form, producto_id: e.target.value ? Number(e.target.value) : null })}
+                    disabled={editingLoteId !== null}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                     <option value="">Selecciona un producto...</option>
                     {productos.map(p => (
@@ -351,7 +417,7 @@ export default function EntradasInventario() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad *</label>
-                  <input type="number" min={1} value={form.cantidad}
+                  <input type="number" min={editingLoteId ? cantidadConsumida : 1} value={form.cantidad}
                     onChange={e => setForm({ ...form, cantidad: Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     placeholder="Ej: 50" />
@@ -419,9 +485,10 @@ export default function EntradasInventario() {
               <button onClick={guardar} disabled={saving}
                 className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Registrar Entrada
+                {editingLoteId ? "Guardar Cambios" : "Registrar Entrada"}
               </button>
             </div>
+            
           </div>
         </div>
       )}

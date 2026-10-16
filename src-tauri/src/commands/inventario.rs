@@ -481,3 +481,202 @@ pub async fn obtener_producto(
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "Producto no encontrado".to_string())
 }
+
+/// Actualiza una entrada (lote) existente y propaga el cambio de costo a:
+///   - movimientos_inventario (COMPRA + todas las salidas ligadas al lote)
+///   - detalle_factura (recalcula el costo ponderado de las facturas afectadas)
+/// Solo permitido si el período de la fecha original está ABIERTO.
+#[tauri::command]
+pub async fn actualizar_entrada(
+    pool: tauri::State<'_, SqlitePool>,
+    lote_id: i64,
+    datos: ActualizarEntrada,
+) -> Result<serde_json::Value, String> {
+    if datos.costo_unitario < 0.0 {
+        return Err("El costo unitario no puede ser negativo".to_string());
+    }
+
+    // 1. Cargar lote
+    let lote: Option<LoteInventario> = sqlx::query_as(
+        "SELECT * FROM lotes_inventario WHERE id = ?"
+    )
+    .bind(lote_id)
+    .fetch_optional(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let lote = match lote {
+        Some(l) => l,
+        None => return Err("Entrada no encontrada".to_string()),
+    };
+
+    if lote.activo == 0 {
+        return Err("No se puede editar una entrada anulada".to_string());
+    }
+
+    // 2. Validar período abierto (fecha original)
+    crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &lote.fecha_entrada).await?;
+
+    // 3. Determinar nueva cantidad
+    let nueva_cantidad = match datos.cantidad {
+        Some(c) if c > 0 => c,
+        Some(_) => return Err("La cantidad debe ser mayor a 0".to_string()),
+        None => lote.cantidad_inicial,
+    };
+
+    let cantidad_consumida = lote.cantidad_inicial - lote.cantidad_restante;
+    if nueva_cantidad < cantidad_consumida {
+        return Err(format!(
+            "No se puede reducir la cantidad a {} porque ya se consumieron {} unidades de este lote. \
+             El mínimo permitido es {}.",
+            nueva_cantidad, cantidad_consumida, cantidad_consumida
+        ));
+    }
+    let nueva_restante = nueva_cantidad - cantidad_consumida;
+
+    // 4. Determinar fecha
+    let ahora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+    let fecha = match datos.fecha_entrada {
+        Some(f) if f.len() == 10 => format!("{} {}", f, &ahora[11..]),
+        Some(f) if !f.is_empty() => f,
+        _ => lote.fecha_entrada.clone(),
+    };
+
+    if fecha != lote.fecha_entrada {
+        crate::commands::periodos::verificar_periodo_abierto(pool.inner(), &fecha).await?;
+    }
+
+    let costo_anterior = lote.costo_unitario;
+    let costo_nuevo = datos.costo_unitario;
+
+    // 5. Actualizar lote
+    sqlx::query(
+        "UPDATE lotes_inventario 
+         SET cantidad_inicial = ?, cantidad_restante = ?, costo_unitario = ?,
+             fecha_entrada = ?, proveedor_id = ?, numero_factura_compra = ?,
+             observaciones = ?, updated_at = ?
+         WHERE id = ?"
+    )
+    .bind(nueva_cantidad)
+    .bind(nueva_restante)
+    .bind(costo_nuevo)
+    .bind(&fecha)
+    .bind(datos.proveedor_id)
+    .bind(datos.numero_factura_compra.unwrap_or_default())
+    .bind(datos.observaciones.unwrap_or_default())
+    .bind(&ahora)
+    .bind(lote_id)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| format!("Error actualizando entrada: {}", e))?;
+
+    // 6. Actualizar el movimiento de COMPRA asociado al lote
+    sqlx::query(
+        "UPDATE movimientos_inventario 
+         SET cantidad = ?, costo_unitario = ?, fecha = ?
+         WHERE lote_id = ? AND tipo = 'COMPRA'"
+    )
+    .bind(nueva_cantidad)
+    .bind(costo_nuevo)
+    .bind(&fecha)
+    .bind(lote_id)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| format!("Error actualizando movimiento de compra: {}", e))?;
+
+    // 7. Actualizar costo en TODOS los demás movimientos ligados a este lote
+    //    (VENTA, AJUSTE_*, ANULACION_ENTRADA, etc.)
+    sqlx::query(
+        "UPDATE movimientos_inventario 
+         SET costo_unitario = ? 
+         WHERE lote_id = ? AND tipo != 'COMPRA'"
+    )
+    .bind(costo_nuevo)
+    .bind(lote_id)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| format!("Error actualizando movimientos: {}", e))?;
+
+    // 8. Si el costo cambió, recalcular detalle_factura de las facturas afectadas
+    let mut facturas_afectadas_count = 0usize;
+    if (costo_nuevo - costo_anterior).abs() > 0.0001 {
+        // Facturas que consumieron este lote
+        let facturas_afectadas: Vec<(i64,)> = sqlx::query_as(
+            "SELECT DISTINCT referencia_id 
+             FROM movimientos_inventario 
+             WHERE lote_id = ? 
+               AND tipo = 'VENTA' 
+               AND referencia_tipo = 'FACTURA' 
+               AND referencia_id IS NOT NULL"
+        )
+        .bind(lote_id)
+        .fetch_all(pool.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+
+        for (factura_id,) in facturas_afectadas {
+            // Costo ponderado: suma(ABS(cantidad)*costo) / suma(ABS(cantidad))
+            let totales: (f64, f64) = sqlx::query_as(
+                "SELECT COALESCE(SUM(ABS(m.cantidad) * m.costo_unitario), 0.0),
+                        COALESCE(SUM(ABS(m.cantidad)), 0.0)
+                 FROM movimientos_inventario m
+                 WHERE m.referencia_tipo = 'FACTURA'
+                   AND m.referencia_id = ?
+                   AND m.tipo = 'VENTA'
+                   AND m.producto_id = ?"
+            )
+            .bind(factura_id)
+            .bind(lote.producto_id)
+            .fetch_one(pool.inner())
+            .await
+            .map_err(|e| e.to_string())?;
+
+            let nuevo_costo_prom = if totales.1 > 0.0 { totales.0 / totales.1 } else { 0.0 };
+
+            // Recalcular porcentaje de ganancia real
+            let precio: Option<(f64,)> = sqlx::query_as(
+                "SELECT precio_unitario FROM detalle_factura 
+                 WHERE factura_id = ? AND producto_id = ? AND tipo_item = 'PRODUCTO' 
+                 LIMIT 1"
+            )
+            .bind(factura_id)
+            .bind(lote.producto_id)
+            .fetch_optional(pool.inner())
+            .await
+            .map_err(|e| e.to_string())?;
+
+            let porc = match precio {
+                Some((p,)) if nuevo_costo_prom > 0.0 => {
+                    ((p - nuevo_costo_prom) / nuevo_costo_prom) * 100.0
+                }
+                _ => 0.0,
+            };
+
+            sqlx::query(
+                "UPDATE detalle_factura 
+                 SET costo_unitario = ?, porcentaje_ganancia = ?
+                 WHERE factura_id = ? AND producto_id = ? AND tipo_item = 'PRODUCTO'"
+            )
+            .bind(nuevo_costo_prom)
+            .bind(porc)
+            .bind(factura_id)
+            .bind(lote.producto_id)
+            .execute(pool.inner())
+            .await
+            .map_err(|e| format!("Error recalculando costo en factura: {}", e))?;
+
+            facturas_afectadas_count += 1;
+        }
+    }
+
+    Ok(serde_json::json!({
+        "success": true,
+        "message": format!(
+            "Entrada actualizada. Se recalculó el costo en {} factura(s) afectada(s).",
+            facturas_afectadas_count
+        ),
+        "facturas_afectadas": facturas_afectadas_count,
+        "costo_anterior": costo_anterior,
+        "costo_nuevo": costo_nuevo
+    }))
+}

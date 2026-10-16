@@ -153,7 +153,7 @@ pub async fn listar_entradas(
                 p.nombre as producto_nombre, l.cantidad_inicial, 
                 l.cantidad_restante, l.costo_unitario,
                 (l.cantidad_inicial * l.costo_unitario) as costo_total,
-                l.fecha_entrada, pr.nombre as proveedor_nombre,
+                l.fecha_entrada, l.proveedor_id, pr.nombre as proveedor_nombre,
                 l.numero_factura_compra, l.observaciones
         FROM lotes_inventario l
         JOIN productos p ON l.producto_id = p.id
