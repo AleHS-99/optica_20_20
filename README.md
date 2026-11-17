@@ -1,6 +1,6 @@
 # Optica 20/20
 
-Sistema de gestión integral para ópticas desarrollado con **Tauri**, **React** y **TypeScript**. Diseñado para el control completo de pacientes, consultas, inventario, facturación, contabilidad y cierre mensual, con un enfoque específico para el contexto cubano.
+Sistema de gestión integral para ópticas desarrollado con **Tauri**, **React** y **TypeScript**. Diseñado para el control completo de pacientes, consultas, inventario, facturación, contabilidad y cierre mensual.
 
 ---
 
@@ -193,28 +193,3 @@ La base de datos SQLite se crea automáticamente al ejecutar la aplicación por 
   - **Utilidad Neta**
 - **Vista en tiempo real** del mes sin cerrar
 - **Checkbox** para incluir gastos fijos en vista preliminar
-
----
-
-## 🤝 Contribución
-
-1. Haz fork del repositorio
-2. Crea tu rama de características (`git checkout -b feature/amazing-feature`)
-3. Haz commit de tus cambios (`git commit -m 'Add amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
-
-### Estilo de Código
-
-- **TypeScript**: Sigue las reglas de ESLint y Prettier
-- **Rust**: Sigue las convenciones de Rustfmt
-- **Commits**: Mensajes descriptivos en español
-
-
----
-
-## 📞 Contacto
-**Email**: [ahsilva745@gmail.com]  
-**GitHub**: [github.com/AleHS-99](https://github.com/AleHS-99)
-
----
